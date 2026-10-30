@@ -129,7 +129,7 @@
     <h2>Ashland Elementary Edition</h2>
     <p>Seven of your teachers are hiding somewhere around the school.<br>
        Find them all as fast as you can!<br>
-       <small>Drag to look around &bull; scroll or pinch to zoom &bull; tap a teacher when you spot one.</small></p>
+       <small>Drag to look around &bull; scroll or pinch to zoom &bull; tap a teacher when you spot one.<br>🎵 Music plays during the game. Use the 🔊 button to turn sound off.</small></p>
     <button id="start" disabled>Loading&hellip;</button>
   </div>
 </div>
@@ -224,6 +224,7 @@ const HINT_PENALTY = 15;
 
 /* ---------- DOM ---------- */
 const $ = id => document.getElementById(id);
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
 const title = $('title'), stage = $('stage'), vp = $('viewport'), world = $('world'), bgImg = $('bg');
 const card = $('card'), bottomLeft = card.querySelector('.bottomleft');
 const timerEl = $('timer'), timer2 = $('timer2'), countEl = $('count'), count2 = $('count2');
@@ -252,9 +253,32 @@ const SFX = {
   click(){ tone(1200,0,.05,'sine',.08); },
 };
 function play(name){ if(soundOn){ try{ SFX[name](); }catch(e){} } }
-function setSoundBtn(){ $('soundBtn').textContent = soundOn ? '🔊' : '🔇'; }
-$('soundBtn').onclick = () => { soundOn = !soundOn; localStorage.setItem('ww_sound', soundOn?'on':'off'); setSoundBtn(); if(soundOn) play('click'); };
+function setSoundBtn(){ $('soundBtn').textContent = soundOn ? '🔊' : '🔇'; $('soundBtn').title = soundOn ? 'Sound on (click to mute music + effects)' : 'Sound off (click to unmute)'; }
+$('soundBtn').onclick = () => { soundOn = !soundOn; localStorage.setItem('ww_sound', soundOn?'on':'off'); setSoundBtn(); if(soundOn) play('click'); updateMusic(); };
 setSoundBtn();
+
+/* ---------- background music: SimCity 2000 soundtrack, shuffled ---------- */
+const TRACKS = [
+  ['01-simcity-segue','Simcity Segue'],['02-mayor-mombo','Mayor Mombo'],['03-downtown-dance','Downtown Dance'],
+  ['04-city-shimmy','City Shimmy'],['05-virtual-village','Virtual Village'],['06-railroad-rap','Railroad Rap'],
+  ['07-traffic-trouble','Traffic Trouble'],['08-subway-song','Subway Song'],['09-chinatown-concerto','Chinatown Concerto'],
+  ['10-harbor-hymn','Harbor Hymn'],['11-repetition-rendition','Repetition Rendition'],['12-disaster-decision','Disaster Decision'],
+  ['13-serious-sims','Serious Sims'],['14-bluesy-berg','Bluesy Berg'],
+];
+const MUSIC_VOL = 0.35;
+const music = new Audio(); music.id = 'bgm'; music.preload = 'none'; music.volume = MUSIC_VOL; document.body.appendChild(music);
+let queue = [], lastTrack = null, musicStarted = false;
+function nextTrack(){
+  if(!queue.length){ queue = shuffle(TRACKS.slice()); if(queue.length > 1 && queue[0] === lastTrack) queue.push(queue.shift()); }
+  const t = queue.shift(); lastTrack = t;
+  music.src = `music/${t[0]}.webm`;
+  music.play().then(() => showToast(`♪ ${t[1]}`)).catch(() => {});
+}
+music.addEventListener('ended', () => { if(soundOn) nextTrack(); });
+music.addEventListener('error', () => { if(soundOn) setTimeout(nextTrack, 500); });
+function startMusic(){ musicStarted = true; if(!soundOn) return; if(music.paused && music.src && !music.ended) music.play().catch(()=>{}); else nextTrack(); }
+function pauseMusic(){ music.pause(); }
+function updateMusic(){ if(!musicStarted) return; if(soundOn){ if(music.paused) startMusic(); } else pauseMusic(); }
 
 /* ---------- pan / zoom ---------- */
 let s = 1, tx = 0, ty = 0, minS = 0.1, MAX_ZOOM = 6;
@@ -317,7 +341,6 @@ $('zoomFit').onclick = () => { play('click'); smooth(fit); };
 
 /* ---------- game state ---------- */
 let chars = [], foundCount = 0, bonusChar = null, running = false, startTime = 0, penalty = 0, finalMs = 0, rafId = 0;
-const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
 const fmt = ms => { const t = Math.floor(ms/1000); return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`; };
 
 function pickSpots(n){
@@ -400,7 +423,7 @@ function found(c){
   $('tile-' + c.def.id).classList.add('found');
   if(foundCount >= TEACHERS.length){
     running = false; finalMs = performance.now() - startTime; tick(); timerEl.classList.add('done');
-    setTimeout(() => { play('win'); showWin(); confetti(); }, 700);
+    setTimeout(() => { music.volume = 0.12; play('win'); showWin(); confetti(); setTimeout(() => { music.volume = MUSIC_VOL; }, 3500); }, 700);
   } else {
     showToast(`You found ${c.def.name}!`);
   }
@@ -451,7 +474,7 @@ function confetti(){
 const preload = [...TEACHERS, ...BONUS].map(t => { const i = new Image(); i.src = `img/c/${t.id}.webp`; return i; });
 function ready(){ const b = $('start'); b.disabled = false; b.textContent = 'Start searching!'; }
 if(bgImg.complete && bgImg.naturalWidth) ready(); else { bgImg.onload = ready; bgImg.onerror = ready; }
-$('start').onclick = () => { audio(); play('start'); title.classList.add('hide'); stage.classList.remove('hide'); newGame(); };
+$('start').onclick = () => { audio(); play('start'); title.classList.add('hide'); stage.classList.remove('hide'); newGame(); startMusic(); };
 })();
 </script>
 </body>
