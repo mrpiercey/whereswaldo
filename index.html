@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Where's Waldo? Ashland Elementary Edition</title>
+<title>Where Are We? Ashland Elementary Edition</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Patrick+Hand+SC&display=swap" rel="stylesheet">
 <style>
@@ -13,16 +13,18 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;overflow:hidden;background:#6db5d9;font-family:var(--font);color:var(--ink);user-select:none;-webkit-user-select:none}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  html,body{touch-action:manipulation;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
   button{font-family:var(--font);cursor:pointer}
   .hide{display:none!important}
 
   /* ---------- title screen ---------- */
-  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;
     background:#6db5d9;overflow:hidden}
   #crowd{position:fixed;inset:0;overflow:hidden;pointer-events:none}
   #crowd img{position:absolute;filter:drop-shadow(2px 3px 0 rgba(0,0,0,.25))}
   #title::after{content:"";position:fixed;inset:0;background:rgba(109,181,217,.35);pointer-events:none}
-  #title .box{z-index:1}
+  #title .box{z-index:1;margin:auto 0;flex:none}
   #title .box{position:relative;background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:22px 28px 26px;
     max-width:min(92vw,560px);text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);transform:rotate(-2deg)}
   #title h1{margin:0 0 6px;font-size:clamp(28px,5vw,44px);line-height:1;letter-spacing:1px}
@@ -34,7 +36,7 @@
   .scenePick{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
   .scenePick button{width:156px;padding:6px 6px 8px;border:3px solid var(--ink);border-radius:8px;background:#fff;box-shadow:4px 4px 0 var(--ink);
     display:flex;flex-direction:column;align-items:center;gap:3px;font-size:18px;line-height:1.1;transition:transform .1s}
-  .scenePick button:hover{transform:translateY(-2px) rotate(-1deg)}
+  @media (hover:hover){.scenePick button:hover{transform:translateY(-2px) rotate(-1deg)}}
   .scenePick button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
   .scenePick img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:4px;border:2px solid var(--ink);display:block}
   .scenePick .rec{font-size:13px;color:#666;min-height:15px}
@@ -115,10 +117,11 @@
 
   /* ---------- toast + win ---------- */
   #toast{position:absolute;left:50%;top:14px;transform:translate(-50%,-150%);background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:8px 22px;font-size:22px;
-    box-shadow:4px 4px 0 rgba(0,0,0,.35);z-index:9;transition:transform .35s cubic-bezier(.3,1.4,.5,1);white-space:nowrap}
+    box-shadow:4px 4px 0 rgba(0,0,0,.35);z-index:9;transition:transform .35s cubic-bezier(.3,1.4,.5,1);white-space:nowrap;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis}
+  #toast:not(.show){transform:translate(-50%,calc(-100% - 30px))}
   #toast.show{transform:translate(-50%,0)}
   #win{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:20}
-  #win .box{background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:20px 26px;max-height:94vh;overflow:auto;text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);max-width:92vw;transform:rotate(-1.5deg);animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
+  #win .box{background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:20px 26px;max-height:94vh;max-height:94dvh;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);max-width:92vw;transform:rotate(-1.5deg);animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
   #win h1{margin:0 0 4px;font-size:44px;color:var(--red);line-height:1}
   #win .time{font-size:56px;color:var(--blue);line-height:1.1;font-family:'Patrick Hand SC',var(--font)}
   #win p{margin:6px 0;font-size:19px}
@@ -158,6 +161,35 @@
     #controls button.wide{grid-column:auto;width:34px;font-size:0;padding:0}
     #controls button.wide::before{content:"💡";font-size:16px}
     #intro p{font-size:16px}#intro h1{font-size:24px}#findBtn{font-size:22px}
+    #title{padding:12px}
+    #title .box{padding:16px 14px 18px;transform:rotate(-1deg)}
+    #title p{font-size:17px}
+    .scenePick{gap:8px;flex-wrap:nowrap;width:100%}
+    .scenePick button,#win .scenePick button{width:auto;flex:1 1 0;min-width:0;font-size:14px;padding:4px 4px 6px;box-shadow:3px 3px 0 var(--ink)}
+    .scenePick .rec{font-size:10px;min-height:12px}
+    #win .box{padding:16px 14px;transform:none}
+    #win h1{font-size:34px}#win .time{font-size:46px}
+    #toast{font-size:17px;padding:6px 16px}
+  }
+  /* phones turned sideways: short screen, so shrink the faces and fit the intro card in one row */
+  @media (max-height:500px){
+    #stage{--pic:40px;--slotW:64px;--railW:76px}
+    .rail{gap:3px;padding:6px 0}
+    .slot{height:calc(var(--pic) + 8px)}
+    .tile .nm{display:none}
+    #timer{font-size:22px}#count{font-size:12px}
+    #controls{grid-template-columns:repeat(2,32px);gap:4px}
+    #controls button{width:32px;height:32px;font-size:15px}
+    #controls button.wide{font-size:12px}
+    #intro .box{padding:10px 18px 12px;max-width:min(96vw,640px)}
+    #intro .logo{width:40px;height:40px}#intro h1{font-size:22px}#introPlace{font-size:15px}
+    #intro p{font-size:15px;margin:6px 0}
+    #introSlots{max-width:none;flex-wrap:nowrap;margin-bottom:8px}
+    #findBtn{font-size:20px;padding:4px 26px}
+    #title{padding:8px}
+    #title .box{padding:12px 18px 14px}
+    #title h1{font-size:28px}#title h2{font-size:18px;margin-bottom:4px}#title p{font-size:15px;margin-bottom:6px}
+    #win .box{padding:12px 18px}#win h1{font-size:30px}#win .time{font-size:40px}
   }
 </style>
 </head>
@@ -166,7 +198,7 @@
 <div id="title">
   <div id="crowd"></div>
   <div class="box">
-    <h1><span class="w">WHERE'S</span> <span class="r">WALDO?</span></h1>
+    <h1><span class="w">WHERE ARE</span> <span class="r">WE?</span></h1>
     <h2>Ashland Elementary Edition</h2>
     <p>Seven of your teachers are hiding! Pick a place, then find them all as fast as you can.<br>
        <small>Drag to look around &bull; scroll or pinch to zoom &bull; tap a teacher when you spot one.</small></p>
@@ -201,8 +233,8 @@
 
   <div id="intro" class="hide">
     <div class="box">
-      <div class="top"><img class="logo" src="img/logo.webp" alt="Ashland Elementary"><div><h1><span class="w">WHERE'S</span> <span class="r">WALDO?</span></h1><div id="introPlace"></div></div></div>
-      <p>Your 4th and 5th grade teachers have hidden themselves like Waldo! Can you find them? You never know who else you may find.</p>
+      <div class="top"><img class="logo" src="img/logo.webp" alt="Ashland Elementary"><div><h1><span class="w">WHERE ARE</span> <span class="r">WE?</span></h1><div id="introPlace"></div></div></div>
+      <p>Your 4th and 5th grade teachers are hiding! Can you find them? You never know who else you may find.</p>
       <div id="introSlots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
       <button id="findBtn">FIND THEM!</button>
     </div>
@@ -295,6 +327,7 @@ const HINT_PENALTY = 15;
 /* ---------- DOM ---------- */
 const $ = id => document.getElementById(id);
 const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+document.addEventListener('gesturestart', e => e.preventDefault());
 const title = $('title'), stage = $('stage'), vp = $('viewport'), world = $('world'), bgImg = $('bg');
 const timerEl = $('timer'), countEl = $('count'), tilesEl = $('tiles');
 const tip = $('tip'), toast = $('toast'), winEl = $('win');
@@ -362,7 +395,10 @@ function layoutStage(){
   if(matchMedia('(max-width:640px)').matches){ vp.style.inset = `${$('railL').offsetHeight}px 0 ${$('railR').offsetHeight}px 0`; }
   else vp.style.inset = '';
 }
-function fit(){ layoutStage();  const r = vpRect(); minS = Math.min(r.width/W, r.height/H); s = minS; apply(); }
+function fit(whole){
+  layoutStage(); const r = vpRect(); minS = Math.min(r.width/W, r.height/H); s = minS;
+  if(!whole && r.height > r.width) centerOn(W/2, H/2, Math.min(r.height/H, minS*scene.maxZoom)); else apply();
+}
 function zoomAt(cx, cy, factor){
   const ns = Math.max(minS, Math.min(minS*scene.maxZoom, s*factor));
   tx = cx - (cx - tx) * ns/s; ty = cy - (cy - ty) * ns/s; s = ns; apply();
@@ -410,7 +446,7 @@ function endPointer(e){
 vp.addEventListener('pointerup', endPointer); vp.addEventListener('pointercancel', endPointer);
 $('zoomIn').onclick  = () => { play('click'); const r = vpRect(); smooth(()=>zoomAt(r.width/2, r.height/2, 1.6)); };
 $('zoomOut').onclick = () => { play('click'); const r = vpRect(); smooth(()=>zoomAt(r.width/2, r.height/2, 1/1.6)); };
-$('zoomFit').onclick = () => { play('click'); smooth(fit); };
+$('zoomFit').onclick = () => { play('click'); smooth(() => fit(true)); };
 
 /* ---------- game state ---------- */
 let chars = [], foundCount = 0, bonusChar = null, running = false, startTime = 0, penalty = 0, finalMs = 0, rafId = 0;

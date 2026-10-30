@@ -1,4 +1,4 @@
-# Where's Waldo? Ashland Elementary Edition
+# Where Are We? Ashland Elementary Edition
 
 A find-the-teachers game for 4th and 5th graders. Live at https://waldo.ashlandthegame.com (GitHub Pages with a custom domain, set by the `CNAME` file and a GoDaddy CNAME record `waldo` pointing to `mrpiercey.github.io`).
 
