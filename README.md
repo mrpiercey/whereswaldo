@@ -2,6 +2,7 @@
 
 A find-the-teachers game for 4th and 5th graders. Open `index.html` (or host it on GitHub Pages).
 
+- Each round is played on one of two scenes, Ashland Elementary or Downtown Lexington, switching every round.
 - Every round hides the same 7 teachers (Piercey, Yoo, Laborio, White, Gaddis, Hill, Givan) in a fresh set of spots.
 - One secret bonus character (Mr. Richards, Mr. Rampulla, or Eddie the Eagle) is also hidden each round. Players aren't told who.
 - Timer counts up. A hint zooms near a missing teacher and adds 15 seconds.
@@ -12,8 +13,7 @@ A find-the-teachers game for 4th and 5th graders. Open `index.html` (or host it 
 
 Everything lives in `index.html`:
 
-- `SPOTS` is the list of hand-picked hiding places (`[x, y]` = where the feet go, in pixels of the 6300x3600 background). Add or remove spots there.
-- `standingHeight(y)` controls how big people are drawn (bigger lower in the picture).
+- `SCENES` lists each background. Each scene has its own hand-picked `spots` (`[x, y]` = where the feet go, in background pixels), a `size(y)` function for how tall people are drawn, and its max zoom. To add a scene, drop a WebP in `img/` and add an entry.
 - `TEACHERS` / `BONUS` hold names, tile colors, and per-pose size tweaks.
 
 ## Music

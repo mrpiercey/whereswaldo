@@ -79,11 +79,10 @@
   #bonusRow b{color:#b07d00}
 
   #cardToggle{position:absolute;right:-3px;bottom:-30px;font-size:14px;padding:2px 10px;background:var(--paper);border:3px solid var(--ink);border-top:none;border-radius:0 0 6px 6px}
-  #card.collapsed{grid-template-rows:auto}
-  #card.collapsed .greeting,#card.collapsed .bottomleft,#card.collapsed #status,#card.collapsed #bonusRow{display:none}
-  #card.collapsed{grid-template-columns:repeat(4,92px);width:auto}
-  #card.collapsed .tile{grid-column:auto;grid-row:auto}
-  #card.collapsed #miniStatus{display:flex}
+  #card.collapsed .greeting,#card.collapsed .logo,#card.collapsed #status,#card.collapsed #bonusRow{display:none}
+  #card.collapsed .bottomleft{display:contents}
+  #card.collapsed{display:flex;flex-wrap:wrap;gap:8px 4px;width:auto;max-width:min(calc(100vw - 28px),420px)}
+  #card.collapsed #miniStatus{display:flex;width:100%}
   #miniStatus{display:none;grid-column:1/-1;justify-content:space-between;font-size:18px}
 
   /* ---------- controls (bottom-right) ---------- */
@@ -127,7 +126,7 @@
   <div class="box">
     <h1><span class="w">WHERE'S</span> <span class="r">WALDO?</span></h1>
     <h2>Ashland Elementary Edition</h2>
-    <p>Seven of your teachers are hiding somewhere around the school.<br>
+    <p>Seven of your teachers are hiding somewhere around the school or downtown Lexington.<br>
        Find them all as fast as you can!<br>
        <small>Drag to look around &bull; scroll or pinch to zoom &bull; tap a teacher when you spot one.<br>🎵 Music plays during the game. Use the 🔊 button to turn sound off.</small></p>
     <button id="start" disabled>Loading&hellip;</button>
@@ -189,7 +188,7 @@
 <script>
 (() => {
 'use strict';
-const W = 6300, H = 3600;
+let W = 6300, H = 3600;
 
 /* Characters. ar = width/height of the cutout, hf = how tall this pose is vs. a standing person. */
 const TEACHERS = [
@@ -207,19 +206,27 @@ const BONUS = [
   { id:'eddie',    name:'Eddie the Eagle', ar:500/445, hf:0.92 },
 ];
 
-/* Hand-picked hiding spots: [x, y] is where the character's feet go (image pixels).
-   Every spot is on ground a person could actually stand on: sidewalks, lawns, driveways,
-   playgrounds, the school entrance, the crosswalk. Nothing on roofs or in trees. */
-const SPOTS = [
-  [345,2925],[1275,1620],[1845,1020],[1725,345],[2460,225],[2595,435],[3150,570],[3525,705],
+/* Scenes. Each has hand-picked hiding spots: [x, y] is where the character's feet go (image pixels).
+   Every spot is ground a person could stand on: sidewalks, lawns, plazas, parking lots, crosswalks.
+   Nothing on roofs or in trees. size(y) gives a standing person's height, bigger lower in the picture. */
+const SCENES = [
+  { id:'school', name:'Ashland Elementary', bg:'img/bg.webp', W:6300, H:3600, gap:420, maxZoom:6, hintZoom:2.6,
+    size: y => 120 + 120 * (y / 3600),
+    spots:[[345,2925],[1275,1620],[1845,1020],[1725,345],[2460,225],[2595,435],[3150,570],[3525,705],
   [2550,840],[3090,795],[5040,330],[5700,630],[5550,495],[5280,840],[6150,1380],[6075,1680],
   [1500,2175],[1800,3000],[1050,3405],[1180,2640],[375,3450],[3255,2400],[3450,2550],[2700,2850],
   [3750,2460],[3600,2670],[2940,2505],[5295,1890],[4650,2250],[5550,3150],[6150,3525],[6075,2925],
-  [4650,3450],[1575,1725],[2325,2330],[2280,3450],
+  [4650,3450],[1575,1725],[2325,2330],[2280,3450],] },
+  { id:'lex', name:'Downtown Lexington', bg:'img/bg-lex.webp', W:6300, H:3600, gap:480, maxZoom:10, hintZoom:4,
+    size: y => 60 + 30 * (y / 3600),
+    spots:[
+      [1050,1125],[720,1410],[225,1440],[1935,480],[960,585],[2730,495],[3030,1050],[4170,1125],[4890,900],[6075,1155],
+      [375,2520],[840,2475],[1620,2505],[1650,2220],[1095,2505],[1440,2700],[1725,3210],[975,3000],[780,3180],
+      [2730,2760],[2550,2940],[3375,3225],[3180,3300],[3675,3090],[2775,3150],[2745,2025],[3450,1995],[3825,2055],[3075,3450],[2445,3525],
+      [4695,2100],[5040,2160],[5550,2850],[5895,2775],[5625,2745],[4350,2775],[4500,2760],[5175,3450],
+    ] },
 ];
-/* Perspective: people lower in the picture are closer to us, so they're drawn bigger. */
-const standingHeight = y => 120 + 120 * (y / H);
-const MIN_SPOT_GAP = 420;
+let scene = SCENES[0], lastSceneId = null;
 const HINT_PENALTY = 15;
 
 /* ---------- DOM ---------- */
@@ -281,7 +288,7 @@ function pauseMusic(){ music.pause(); }
 function updateMusic(){ if(!musicStarted) return; if(soundOn){ if(music.paused) startMusic(); } else pauseMusic(); }
 
 /* ---------- pan / zoom ---------- */
-let s = 1, tx = 0, ty = 0, minS = 0.1, MAX_ZOOM = 6;
+let s = 1, tx = 0, ty = 0, minS = 0.1;
 function vpRect(){ return vp.getBoundingClientRect(); }
 function clampView(){
   const r = vpRect(), w = W*s, h = H*s;
@@ -291,11 +298,11 @@ function clampView(){
 function apply(){ clampView(); world.style.transform = `translate(${tx}px,${ty}px) scale(${s})`; }
 function fit(){ const r = vpRect(); minS = Math.min(r.width/W, r.height/H); s = minS; apply(); }
 function zoomAt(cx, cy, factor){
-  const ns = Math.max(minS, Math.min(minS*MAX_ZOOM, s*factor));
+  const ns = Math.max(minS, Math.min(minS*scene.maxZoom, s*factor));
   tx = cx - (cx - tx) * ns/s; ty = cy - (cy - ty) * ns/s; s = ns; apply();
 }
 function smooth(fn){ world.classList.add('smooth'); fn(); setTimeout(()=>world.classList.remove('smooth'), 600); }
-function centerOn(wx, wy, ns){ const r = vpRect(); s = Math.max(minS, Math.min(minS*MAX_ZOOM, ns)); tx = r.width/2 - wx*s; ty = r.height/2 - wy*s; apply(); }
+function centerOn(wx, wy, ns){ const r = vpRect(); s = Math.max(minS, Math.min(minS*scene.maxZoom, ns)); tx = r.width/2 - wx*s; ty = r.height/2 - wy*s; apply(); }
 window.addEventListener('resize', () => { const r = vpRect(); const nm = Math.min(r.width/W, r.height/H); if(s <= minS+1e-6){ minS = nm; s = nm; } else { minS = nm; s = Math.max(s, minS); } apply(); });
 
 vp.addEventListener('wheel', e => {
@@ -345,10 +352,10 @@ const fmt = ms => { const t = Math.floor(ms/1000); return `${Math.floor(t/60)}:$
 
 function pickSpots(n){
   for(let attempt=0; attempt<50; attempt++){
-    const pool = shuffle(SPOTS.slice()), out = [];
-    for(const p of pool){ if(out.every(q => Math.hypot(p[0]-q[0], p[1]-q[1]) >= MIN_SPOT_GAP)) out.push(p); if(out.length === n) return out; }
+    const pool = shuffle(scene.spots.slice()), out = [];
+    for(const p of pool){ if(out.every(q => Math.hypot(p[0]-q[0], p[1]-q[1]) >= scene.gap)) out.push(p); if(out.length === n) return out; }
   }
-  return shuffle(SPOTS.slice()).slice(0, n);
+  return shuffle(scene.spots.slice()).slice(0, n);
 }
 
 function buildTiles(){
@@ -365,7 +372,7 @@ function buildTiles(){
 }
 
 function placeChar(def, spot, isBonus){
-  const h = standingHeight(spot[1]) * def.hf, w = h * def.ar;
+  const h = scene.size(spot[1]) * def.hf, w = h * def.ar;
   const el = document.createElement('div'); el.className = 'char';
   el.style.cssText = `left:${spot[0]-w/2}px;top:${spot[1]-h}px;width:${w}px;height:${h}px;background-image:url(img/c/${def.id}.webp)`;
   if(!def.noflip && Math.random() < 0.5) el.classList.add('flip');
@@ -374,7 +381,16 @@ function placeChar(def, spot, isBonus){
   return { def, x:spot[0], y:spot[1], w, h, el, found:false, bonus:isBonus };
 }
 
+function pickScene(){
+  const pool = SCENES.filter(x => x.id !== lastSceneId);
+  scene = pool[Math.floor(Math.random()*pool.length)] || SCENES[0];
+  lastSceneId = scene.id; W = scene.W; H = scene.H;
+  world.style.width = bgImg.style.width = W + 'px'; world.style.height = bgImg.style.height = H + 'px';
+  if(!bgImg.src.endsWith(scene.bg)) bgImg.src = scene.bg;
+}
+
 function newGame(){
+  pickScene();
   world.querySelectorAll('.char, .ripple').forEach(e => e.remove());
   chars = []; foundCount = 0; penalty = 0; finalMs = 0; running = true;
   $('bonusRow').classList.add('hide'); $('bonusRow').innerHTML = '';
@@ -389,6 +405,7 @@ function newGame(){
   startTime = performance.now();
   cancelAnimationFrame(rafId); tick();
   tip.classList.remove('fade'); setTimeout(() => tip.classList.add('fade'), 5000);
+  setTimeout(() => showToast(`📍 ${scene.name}`), 300);
 }
 
 function elapsed(){ return (running ? performance.now() - startTime : finalMs) + penalty*1000; }
@@ -450,8 +467,8 @@ $('hintBtn').onclick = () => {
   const c = left[Math.floor(Math.random()*left.length)];
   if(running) penalty += HINT_PENALTY;
   play('hint'); showToast(`Hint: look around here… (+${HINT_PENALTY}s)`);
-  const ox = (Math.random()-0.5) * 700, oy = (Math.random()-0.5) * 450;
-  smooth(() => centerOn(c.x + ox, c.y + oy, minS * 2.6));
+  const k = 2.6 / scene.hintZoom, ox = (Math.random()-0.5) * 700 * k, oy = (Math.random()-0.5) * 450 * k;
+  smooth(() => centerOn(c.x + ox, c.y + oy, minS * scene.hintZoom));
 };
 
 $('cardToggle').onclick = () => { card.classList.toggle('collapsed'); $('cardToggle').textContent = card.classList.contains('collapsed') ? 'show ▼' : 'hide ▲'; play('click'); };
@@ -472,6 +489,7 @@ function confetti(){
 
 /* ---------- boot ---------- */
 const preload = [...TEACHERS, ...BONUS].map(t => { const i = new Image(); i.src = `img/c/${t.id}.webp`; return i; });
+window.addEventListener('load', () => SCENES.forEach(sc => { const i = new Image(); i.src = sc.bg; preload.push(i); }));
 function ready(){ const b = $('start'); b.disabled = false; b.textContent = 'Start searching!'; }
 if(bgImg.complete && bgImg.naturalWidth) ready(); else { bgImg.onload = ready; bgImg.onerror = ready; }
 $('start').onclick = () => { audio(); play('start'); title.classList.add('hide'); stage.classList.remove('hide'); newGame(); startMusic(); };
