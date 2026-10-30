@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "site": "waldoashland",
+    "public": ".",
+    "ignore": ["firebase.json", "**/.*", "images/**", "README.md", "CNAME", "**/node_modules/**"],
+    "headers": [
+      { "source": "**/*.@(webp|webm)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] }
+    ]
+  }
+}

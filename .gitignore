@@ -1,3 +1,4 @@
 # Original full-size source images (55 MB). The game only uses the compressed WebP files in img/.
 images/
 .DS_Store
+.firebase/

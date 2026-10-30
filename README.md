@@ -9,6 +9,15 @@ A find-the-teachers game for 4th and 5th graders. Live at https://waldo.ashlandt
 - Drag to pan, scroll / pinch to zoom, tap a teacher to find them. Green check appears on their card.
 - Sound effects are synthesized in the browser. Background music is the SimCity 2000 (AdLib) soundtrack, split into 14 tracks in `music/` and played in shuffled order. The 🔊 button mutes music and effects together. Best time is saved in the browser.
 
+## Deploying
+
+The game is hosted two ways:
+
+- **Firebase (for students, since GitHub is blocked):** https://waldoashland.web.app. Deploy with `firebase deploy --only hosting` from this folder. It goes to the `waldoashland` site in the Ashland The Game project. The original images in `images/` are not uploaded.
+- **GitHub Pages:** https://waldo.ashlandthegame.com updates automatically on every push to `main`.
+
+After a change, push to GitHub and run the Firebase deploy so both stay the same.
+
 ## Editing
 
 Everything lives in `index.html`:
