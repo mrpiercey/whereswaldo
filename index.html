@@ -53,50 +53,61 @@
   .ripple{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:8px solid rgba(210,35,42,.9);pointer-events:none;animation:ripple .5s ease-out forwards}
   @keyframes ripple{from{transform:scale(.2);opacity:1}to{transform:scale(1.2);opacity:0}}
 
-  /* ---------- the card (top-left) ---------- */
-  #card{position:absolute;left:14px;top:14px;width:430px;max-width:calc(100vw - 28px);background:var(--paper);border:3px solid var(--ink);
-    border-radius:4px;padding:12px 14px 10px;box-shadow:5px 5px 0 rgba(0,0,0,.35);z-index:5;
-    display:grid;grid-template-columns:1fr 92px 92px;grid-template-rows:auto auto auto;column-gap:10px;row-gap:6px}
-  #card .greeting{grid-column:1;grid-row:1/3;padding-right:4px;display:flex;flex-direction:column}
-  #card h1{margin:0 0 4px;font-size:24px;line-height:1.05}
-  #card p{margin:0;font-size:15.5px;line-height:1.22}
-  #card .bottomleft{grid-column:1;grid-row:3;display:flex;align-items:flex-end;justify-content:space-between;gap:6px}
-  #card .logo{width:70px;height:70px;object-fit:contain;flex:none}
-  .tile{position:relative;width:92px;display:flex;flex-direction:column;align-items:center}
-  .tile .pic{width:72px;height:72px;border:3px solid var(--ink);border-radius:3px;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;transition:filter .3s}
+  /* ---------- side rails: faces, timer and buttons live here, never on top of the map ---------- */
+  #stage{--pic:64px;--slotW:86px;--railW:100px;background:#1d6fb8}
+  @media (max-height:640px){#stage{--pic:50px;--slotW:74px;--railW:86px}}
+  #viewport{inset:0 var(--railW)}
+  .rail{position:absolute;top:0;bottom:0;width:var(--railW);background:#fff;z-index:5;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;overflow:hidden}
+  #railL{left:0;border-right:4px solid var(--ink)}
+  #railR{right:0;border-left:4px solid var(--ink)}
+  .slot{width:var(--slotW);height:calc(var(--pic) + 26px);flex:none}
+  #hud{text-align:center;line-height:1;margin-bottom:4px}
+  #timer{font-size:30px;font-variant-numeric:tabular-nums;font-family:'Patrick Hand SC',var(--font);letter-spacing:1px}
+  #timer.done{color:var(--green)}
+  #count{font-size:15px;color:#555;margin-top:2px}
+  #bonusSlot{display:none;flex-direction:column;align-items:center;font-size:14px;color:#b07d00;font-weight:bold;animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+  #bonusSlot.show{display:flex}
+  #bonusSlot .pic{width:calc(var(--pic) - 8px);height:calc(var(--pic) - 8px);border:3px solid var(--gold);border-radius:50%;background:#fff6c7;overflow:hidden}
+  #bonusSlot .pic img{width:100%;height:100%;object-fit:cover}
+  .railSpacer{flex:1}
+
+  /* teacher faces: one layer, flown between the intro card and the rails */
+  #tiles{position:fixed;inset:0;pointer-events:none;z-index:6}
+  body.intro #tiles{z-index:31}
+  .tile{position:fixed;left:50%;top:50%;width:var(--slotW);display:flex;flex-direction:column;align-items:center;
+    transition:left .7s cubic-bezier(.5,0,.2,1),top .7s cubic-bezier(.5,0,.2,1)}
+  .tile.noanim{transition:none}
+  .tile .pic{width:var(--pic);height:var(--pic);border:3px solid var(--ink);border-radius:3px;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;transition:filter .3s;background:#fff}
   .tile .pic img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}
-  .tile .nm{font-size:14px;line-height:1.1;margin-top:3px;white-space:nowrap;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
-  .tile .chk{position:absolute;top:-9px;right:1px;width:30px;height:30px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.4);
+  .tile .nm{font-size:13px;line-height:1.1;margin-top:3px;white-space:nowrap;color:var(--ink);background:#fff;padding:0 3px;border-radius:3px}
+  .tile .chk{position:absolute;top:-8px;right:2px;width:28px;height:28px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.4);
     display:flex;align-items:center;justify-content:center;transform:scale(0);z-index:2}
-  .tile .chk svg{width:18px;height:18px}
+  .tile .chk svg{width:16px;height:16px}
   .tile.found .chk{animation:pop .45s cubic-bezier(.3,1.6,.5,1) forwards}
-  .tile.found .pic{filter:saturate(.6)}
+  .tile.found .pic{filter:saturate(.5) brightness(.9)}
   .tile.found .nm{text-decoration:line-through}
   @keyframes pop{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(0)}}
 
-  #status{margin-top:auto;padding-top:8px;display:flex;align-items:baseline;gap:10px;font-size:16px}
-  #timer{font-size:34px;line-height:1;font-variant-numeric:tabular-nums;font-family:'Patrick Hand SC',var(--font);letter-spacing:1px}
-  #timer.done{color:var(--green)}
-  #count{color:#555}
+  /* intro card shown when a map opens */
+  #intro{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);transition:opacity .5s}
+  #intro.fade{opacity:0;pointer-events:none}
+  #intro .box{background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:18px 26px 22px;max-width:min(92vw,520px);text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);transition:transform .5s}
+  #intro.fade .box{transform:scale(.9)}
+  #intro .top{display:flex;align-items:center;justify-content:center;gap:12px}
+  #intro .logo{width:64px;height:64px;object-fit:contain}
+  #intro h1{margin:0;font-size:32px;line-height:1}
+  #intro h1 .w{color:var(--blue)}#intro h1 .r{color:var(--red)}
+  #introPlace{font-size:20px;color:#555;margin-top:2px}
+  #intro p{font-size:20px;line-height:1.3;margin:10px 0 8px}
+  #introSlots{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 4px;max-width:calc(var(--slotW) * 4 + 16px);margin:0 auto 12px}
+  #findBtn{font-size:28px;padding:8px 34px;background:var(--red);color:#fff;border:4px solid var(--ink);border-radius:999px;box-shadow:4px 4px 0 var(--ink);letter-spacing:1px}
+  #findBtn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
 
-  #bonusRow{grid-column:1/4;margin-top:4px;border-top:2px dashed #999;padding-top:6px;display:flex;align-items:center;gap:10px;font-size:17px}
-  #bonusRow .pic{width:48px;height:48px;border:3px solid var(--gold);border-radius:50%;background:#fff6c7;overflow:hidden;flex:none}
-  #bonusRow .pic img{width:100%;height:100%;object-fit:cover}
-  #bonusRow b{color:#b07d00}
-
-  #cardToggle{position:absolute;right:-3px;bottom:-30px;font-size:14px;padding:2px 10px;background:var(--paper);border:3px solid var(--ink);border-top:none;border-radius:0 0 6px 6px}
-  #card.collapsed .greeting,#card.collapsed .logo,#card.collapsed #status,#card.collapsed #bonusRow{display:none}
-  #card.collapsed .bottomleft{display:contents}
-  #card.collapsed{display:flex;flex-wrap:wrap;gap:8px 4px;width:auto;max-width:min(calc(100vw - 28px),420px)}
-  #card.collapsed #miniStatus{display:flex;width:100%}
-  #miniStatus{display:none;grid-column:1/-1;justify-content:space-between;font-size:18px}
-
-  /* ---------- controls (bottom-right) ---------- */
-  #controls{position:absolute;right:14px;bottom:14px;display:flex;gap:8px;z-index:5}
-  #controls button{width:50px;height:50px;font-size:22px;background:var(--paper);border:3px solid var(--ink);border-radius:50%;box-shadow:3px 3px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:0}
+  /* ---------- buttons (bottom of the right rail) ---------- */
+  #controls{display:grid;grid-template-columns:repeat(2,40px);gap:6px;justify-content:center}
+  #controls button{width:40px;height:40px;font-size:20px;background:var(--paper);border:3px solid var(--ink);border-radius:50%;box-shadow:2px 2px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:0}
   #controls button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,.35)}
-  #controls button.wide{width:auto;padding:0 16px;border-radius:999px;font-size:20px;background:#fff6c7}
-  #controls button svg{width:24px;height:24px}
+  #controls button.wide{grid-column:1/3;width:auto;border-radius:999px;font-size:15px;background:#fff6c7;padding:0 6px}
   #tip{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:6px 16px;border-radius:999px;font-size:17px;z-index:4;pointer-events:none;transition:opacity .5s}
   #tip.fade{opacity:0}
 
@@ -133,11 +144,18 @@
   #confetti{position:fixed;inset:0;pointer-events:none;z-index:21}
 
   @media (max-width:640px){
-    #card{width:auto;grid-template-columns:1fr 72px 72px;padding:8px 10px}
-    #card h1{font-size:19px}#card p{font-size:13px}
-    .tile{width:72px}.tile .pic{width:56px;height:56px}.tile .nm{font-size:12px}
-    #timer{font-size:26px}#status{font-size:13px}
-    #card .logo{width:52px;height:52px}
+    #stage{--pic:38px;--slotW:52px}
+    .tile .nm{font-size:10px}
+    .rail{width:auto;left:0;right:0;flex-direction:row;justify-content:center;padding:6px 4px;gap:2px}
+    #railL{top:0;bottom:auto;border-right:none;border-bottom:4px solid var(--ink)}
+    #railR{bottom:0;top:auto;border-left:none;border-top:4px solid var(--ink);flex-wrap:wrap}
+    #hud{margin:0 6px 0 0}#timer{font-size:22px}#count{font-size:12px}
+    .railSpacer{display:none}
+    #controls{grid-template-columns:repeat(5,34px);gap:4px}
+    #controls button{width:34px;height:34px;font-size:16px}
+    #controls button.wide{grid-column:auto;width:34px;font-size:0;padding:0}
+    #controls button.wide::before{content:"💡";font-size:16px}
+    #intro p{font-size:16px}#intro h1{font-size:24px}#findBtn{font-size:22px}
   }
 </style>
 </head>
@@ -161,33 +179,34 @@
     </div>
   </div>
 
-  <div id="card">
-    <div class="greeting">
-      <h1>Greetings 4th and 5th Graders,</h1>
-      <p>Your teachers have hidden themselves. Now, where could they be? I wonder who else could be hiding in this image?</p>
-      <div id="status">
-        <div id="timer">0:00</div>
-        <div id="count">0 / 7 found</div>
-      </div>
+  <div class="rail" id="railL">
+    <div id="hud"><div id="timer">0:00</div><div id="count">0 / 7</div></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+  </div>
+  <div class="rail" id="railR">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div id="bonusSlot"></div>
+    <div class="railSpacer"></div>
+    <div id="controls">
+      <button id="hintBtn" class="wide" title="Get a hint (adds 15 seconds)">💡 +15s</button>
+      <button id="zoomIn" title="Zoom in">+</button>
+      <button id="zoomOut" title="Zoom out">−</button>
+      <button id="zoomFit" title="See the whole picture">⤢</button>
+      <button id="soundBtn" title="Sound on/off">🔊</button>
     </div>
-    <div class="bottomleft">
-      <img class="logo" src="img/logo.webp" alt="Ashland Elementary">
-      <!-- tile 5 is inserted here by script -->
+  </div>
+  <div id="tiles"></div>
+
+  <div id="intro" class="hide">
+    <div class="box">
+      <div class="top"><img class="logo" src="img/logo.webp" alt="Ashland Elementary"><div><h1><span class="w">WHERE'S</span> <span class="r">WALDO?</span></h1><div id="introPlace"></div></div></div>
+      <p>Your 4th and 5th grade teachers have hidden themselves like Waldo! Can you find them? You never know who else you may find.</p>
+      <div id="introSlots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+      <button id="findBtn">FIND THEM!</button>
     </div>
-    <div id="bonusRow" class="hide"></div>
-    <div id="miniStatus"><span id="timer2">0:00</span><span id="count2">0 / 7</span></div>
-    <button id="cardToggle" title="Hide / show the card">hide ▲</button>
   </div>
 
   <div id="tip">Drag to look around &bull; scroll or pinch to zoom</div>
-
-  <div id="controls">
-    <button id="hintBtn" class="wide" title="Get a hint (adds 15 seconds)">💡 Hint +15s</button>
-    <button id="zoomIn" title="Zoom in">+</button>
-    <button id="zoomOut" title="Zoom out">−</button>
-    <button id="zoomFit" title="See the whole picture">⤢</button>
-    <button id="soundBtn" title="Sound on/off">🔊</button>
-  </div>
 
   <div id="toast"></div>
 </div>
@@ -275,8 +294,7 @@ const HINT_PENALTY = 15;
 const $ = id => document.getElementById(id);
 const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
 const title = $('title'), stage = $('stage'), vp = $('viewport'), world = $('world'), bgImg = $('bg');
-const card = $('card'), bottomLeft = card.querySelector('.bottomleft');
-const timerEl = $('timer'), timer2 = $('timer2'), countEl = $('count'), count2 = $('count2');
+const timerEl = $('timer'), countEl = $('count'), tilesEl = $('tiles');
 const tip = $('tip'), toast = $('toast'), winEl = $('win');
 
 /* ---------- sound (synthesized, no audio files) ---------- */
@@ -338,14 +356,18 @@ function clampView(){
   ty = h <= r.height ? (r.height - h)/2 : Math.min(0, Math.max(r.height - h, ty));
 }
 function apply(){ clampView(); world.style.transform = `translate(${tx}px,${ty}px) scale(${s})`; }
-function fit(){ const r = vpRect(); minS = Math.min(r.width/W, r.height/H); s = minS; apply(); }
+function layoutStage(){
+  if(matchMedia('(max-width:640px)').matches){ vp.style.inset = `${$('railL').offsetHeight}px 0 ${$('railR').offsetHeight}px 0`; }
+  else vp.style.inset = '';
+}
+function fit(){ layoutStage();  const r = vpRect(); minS = Math.min(r.width/W, r.height/H); s = minS; apply(); }
 function zoomAt(cx, cy, factor){
   const ns = Math.max(minS, Math.min(minS*scene.maxZoom, s*factor));
   tx = cx - (cx - tx) * ns/s; ty = cy - (cy - ty) * ns/s; s = ns; apply();
 }
 function smooth(fn){ world.classList.add('smooth'); fn(); setTimeout(()=>world.classList.remove('smooth'), 600); }
 function centerOn(wx, wy, ns){ const r = vpRect(); s = Math.max(minS, Math.min(minS*scene.maxZoom, ns)); tx = r.width/2 - wx*s; ty = r.height/2 - wy*s; apply(); }
-window.addEventListener('resize', () => { const r = vpRect(); const nm = Math.min(r.width/W, r.height/H); if(s <= minS+1e-6){ minS = nm; s = nm; } else { minS = nm; s = Math.max(s, minS); } apply(); });
+window.addEventListener('resize', () => { placeTiles(tileMode, false); const r = vpRect(); const nm = Math.min(r.width/W, r.height/H); if(s <= minS+1e-6){ minS = nm; s = nm; } else { minS = nm; s = Math.max(s, minS); } apply(); });
 
 vp.addEventListener('wheel', e => {
   e.preventDefault();
@@ -400,18 +422,41 @@ function pickSpots(n){
   return shuffle(scene.spots.slice()).slice(0, n);
 }
 
+let tiles = [], tileMode = 'intro';
 function buildTiles(){
-  card.querySelectorAll('.tile').forEach(t => t.remove());
-  TEACHERS.forEach((t, i) => {
-    const el = document.createElement('div'); el.className = 'tile'; el.id = 'tile-' + t.id;
+  tilesEl.innerHTML = '';
+  tiles = TEACHERS.map(t => {
+    const el = document.createElement('div'); el.className = 'tile noanim'; el.id = 'tile-' + t.id;
     el.innerHTML = `<div class="pic" style="background:${t.color}"><img src="img/h/${t.id}.webp" alt=""></div><div class="nm">${t.name}</div>
       <div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>`;
-    /* tiles 1-4 sit in the two right-hand columns, tile 5 beside the logo, tiles 6-7 in the last row */
-    if(i < 4){ el.style.gridColumn = String(2 + (i % 2)); el.style.gridRow = String(1 + Math.floor(i/2)); card.insertBefore(el, bottomLeft); }
-    else if(i === 4){ bottomLeft.appendChild(el); }
-    else { el.style.gridColumn = String(2 + (i - 5)); el.style.gridRow = '3'; card.insertBefore(el, $('bonusRow')); }
+    tilesEl.appendChild(el); return el;
   });
 }
+/* Put each face on its slot: the intro card (mode 'intro') or the side rails (mode 'rail'). */
+function placeTiles(mode, animate){
+  tileMode = mode;
+  const slots = [...document.querySelectorAll(mode === 'intro' ? '#introSlots .slot' : '.rail .slot')];
+  tiles.forEach((t, i) => {
+    const r = slots[i] && slots[i].getBoundingClientRect(); if(!r) return;
+    t.classList.toggle('noanim', !animate);
+    t.style.transitionDelay = animate ? (i * 70) + 'ms' : '0ms';
+    t.style.left = r.left + 'px'; t.style.top = r.top + 'px';
+  });
+}
+function showIntro(){
+  document.body.classList.add('intro');
+  $('introPlace').textContent = scene.name;
+  $('intro').classList.remove('hide', 'fade');
+  requestAnimationFrame(() => placeTiles('intro', false));
+}
+$('findBtn').onclick = () => {
+  audio(); play('start');
+  $('intro').classList.add('fade');
+  placeTiles('rail', true);
+  setTimeout(() => { $('intro').classList.add('hide'); document.body.classList.remove('intro'); }, 1250);
+  running = true; startTime = performance.now(); cancelAnimationFrame(rafId); tick();
+  tip.classList.remove('fade'); setTimeout(() => tip.classList.add('fade'), 5000);
+};
 
 function placeChar(def, spot, isBonus){
   const h = scene.size(spot[1]) * def.hf, w = h * def.ar;
@@ -433,8 +478,8 @@ function pickScene(id){
 function newGame(id){
   pickScene(id); submitted = false;
   world.querySelectorAll('.char, .ripple').forEach(e => e.remove());
-  chars = []; foundCount = 0; penalty = 0; finalMs = 0; running = true;
-  $('bonusRow').classList.add('hide'); $('bonusRow').innerHTML = '';
+  chars = []; foundCount = 0; penalty = 0; finalMs = 0; running = false;
+  $('bonusSlot').classList.remove('show'); $('bonusSlot').innerHTML = '';
   timerEl.classList.remove('done');
   buildTiles();
   const spots = pickSpots(TEACHERS.length + 1);
@@ -443,15 +488,14 @@ function newGame(id){
   chars.push(bonusChar);
   updateCount();
   fit();
-  startTime = performance.now();
   cancelAnimationFrame(rafId); tick();
-  tip.classList.remove('fade'); setTimeout(() => tip.classList.add('fade'), 5000);
-  setTimeout(() => showToast(`📍 ${scene.name}`), 300);
+  tip.classList.add('fade');
+  showIntro();
 }
 
 function elapsed(){ return (running ? performance.now() - startTime : finalMs) + penalty*1000; }
-function tick(){ const t = fmt(elapsed()); timerEl.textContent = t; timer2.textContent = t; if(running) rafId = requestAnimationFrame(tick); }
-function updateCount(){ countEl.textContent = `${foundCount} / ${TEACHERS.length} found`; count2.textContent = `${foundCount} / ${TEACHERS.length}`; }
+function tick(){ timerEl.textContent = fmt(elapsed()); if(running) rafId = requestAnimationFrame(tick); }
+function updateCount(){ countEl.textContent = `${foundCount} / ${TEACHERS.length}`; }
 
 function handleClick(wx, wy){
   if(wx < 0 || wy < 0 || wx > W || wy > H) return;
@@ -470,8 +514,7 @@ function found(c){
   c.found = true; c.el.classList.add('found');
   if(c.bonus){
     play('bonus');
-    const row = $('bonusRow'); row.classList.remove('hide');
-    row.innerHTML = `<div class="pic"><img src="img/h/${c.def.id}.webp" alt=""></div><div><b>⭐ BONUS!</b> You spotted <b>${c.def.name}</b> hiding too!</div>`;
+    const bs = $('bonusSlot'); bs.innerHTML = `<div class="pic"><img src="img/h/${c.def.id}.webp" alt=""></div><div>⭐ BONUS!</div>`; bs.classList.add('show');
     showToast(`⭐ Bonus! You found ${c.def.name}!`);
     if(!running && foundCount >= TEACHERS.length) setTimeout(showWin, 900);
     return;
@@ -595,7 +638,6 @@ $('hintBtn').onclick = () => {
   smooth(() => centerOn(c.x + ox, c.y + oy, minS * scene.hintZoom));
 };
 
-$('cardToggle').onclick = () => { card.classList.toggle('collapsed'); $('cardToggle').textContent = card.classList.contains('collapsed') ? 'show ▼' : 'hide ▲'; play('click'); };
 
 /* ---------- confetti ---------- */
 function confetti(){
