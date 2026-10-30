@@ -2,9 +2,28 @@
   "hosting": {
     "site": "waldoashland",
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "images/**", "README.md", "CNAME", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "images/**",
+      "README.md",
+      "CNAME",
+      "**/node_modules/**",
+      "firestore.rules"
+    ],
     "headers": [
-      { "source": "**/*.@(webp|webm)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] }
+      {
+        "source": "**/*.@(webp|webm)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
+          }
+        ]
+      }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

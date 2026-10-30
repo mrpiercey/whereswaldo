@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Where's Waldo leaderboards: /waldo/{scene}/scores/{id} = { initials: "AB", ms: 83000 }
+    match /waldo/{scene}/scores/{id} {
+      allow read: if scene in ['school', 'lex', 'kroger'];
+      allow create: if scene in ['school', 'lex', 'kroger']
+        && request.resource.data.keys().hasOnly(['initials', 'ms'])
+        && request.resource.data.keys().hasAll(['initials', 'ms'])
+        && request.resource.data.initials is string
+        && request.resource.data.initials.matches('^[A-Z]{2}$')
+        && !(request.resource.data.initials in ['FU'])
+        && request.resource.data.ms is int
+        && request.resource.data.ms >= 5000
+        && request.resource.data.ms <= 7200000;
+      allow update, delete: if false;
+    }
+  }
+}
