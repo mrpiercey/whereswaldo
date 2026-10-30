@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Where's Waldo? Ashland Elementary Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Patrick+Hand+SC&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#111; --paper:#fff; --red:#d2232a; --blue:#1d6fb8; --green:#1f9d3a; --gold:#f5b800;
+    --font:'Patrick Hand','Chalkboard SE','Comic Sans MS',cursive;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#6db5d9;font-family:var(--font);color:var(--ink);user-select:none;-webkit-user-select:none}
+  button{font-family:var(--font);cursor:pointer}
+  .hide{display:none!important}
+
+  /* ---------- title screen ---------- */
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    background:#6db5d9 url(img/cover.webp) center/cover;overflow:hidden}
+  #title::before{content:"";position:absolute;inset:0;background:rgba(109,181,217,.55);backdrop-filter:blur(3px)}
+  #title .box{position:relative;background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:22px 28px 26px;
+    max-width:min(92vw,560px);text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);transform:rotate(-2deg)}
+  #title img.cover{position:relative;width:min(40vh,260px);border:4px solid var(--ink);border-radius:6px;box-shadow:8px 8px 0 rgba(0,0,0,.35);transform:rotate(2deg)}
+  #title h1{margin:0 0 6px;font-size:clamp(28px,5vw,44px);line-height:1;letter-spacing:1px}
+  #title h1 .w{color:var(--blue)}#title h1 .r{color:var(--red)}
+  #title h2{margin:0 0 10px;font-size:clamp(18px,3vw,24px);color:var(--red)}
+  #title p{margin:0 0 16px;font-size:19px;line-height:1.3}
+  #start{font-size:28px;padding:10px 34px;background:var(--red);color:#fff;border:4px solid var(--ink);border-radius:999px;box-shadow:4px 4px 0 var(--ink);transition:transform .1s}
+  #start:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+  #start:disabled{background:#999;cursor:wait}
+
+  /* ---------- stage ---------- */
+  #stage{position:fixed;inset:0;background:#cfe8f3}
+  #viewport{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab}
+  #viewport.dragging{cursor:grabbing}
+  #world{position:absolute;left:0;top:0;width:6300px;height:3600px;transform-origin:0 0;will-change:transform}
+  #world.smooth{transition:transform .55s cubic-bezier(.3,.7,.3,1)}
+  #bg{position:absolute;left:0;top:0;width:6300px;height:3600px;display:block;pointer-events:none}
+  .char{position:absolute;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;transform-origin:50% 100%}
+  .char.flip{transform:scaleX(-1)}
+  .char .ring{position:absolute;left:50%;top:50%;width:160%;height:110%;transform:translate(-50%,-50%);border-radius:50%;
+    border:8px solid var(--green);box-shadow:0 0 0 6px #fff,0 0 30px 8px rgba(31,157,58,.6);opacity:0}
+  .char.found .ring{animation:ring .8s ease-out forwards}
+  @keyframes ring{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}60%{opacity:1;transform:translate(-50%,-50%) scale(.95)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .ripple{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:8px solid rgba(210,35,42,.9);pointer-events:none;animation:ripple .5s ease-out forwards}
+  @keyframes ripple{from{transform:scale(.2);opacity:1}to{transform:scale(1.2);opacity:0}}
+
+  /* ---------- the card (top-left) ---------- */
+  #card{position:absolute;left:14px;top:14px;width:430px;max-width:calc(100vw - 28px);background:var(--paper);border:3px solid var(--ink);
+    border-radius:4px;padding:12px 14px 10px;box-shadow:5px 5px 0 rgba(0,0,0,.35);z-index:5;
+    display:grid;grid-template-columns:1fr 92px 92px;grid-template-rows:auto auto auto;column-gap:10px;row-gap:6px}
+  #card .greeting{grid-column:1;grid-row:1/3;padding-right:4px;display:flex;flex-direction:column}
+  #card h1{margin:0 0 4px;font-size:24px;line-height:1.05}
+  #card p{margin:0;font-size:15.5px;line-height:1.22}
+  #card .bottomleft{grid-column:1;grid-row:3;display:flex;align-items:flex-end;justify-content:space-between;gap:6px}
+  #card .logo{width:70px;height:70px;object-fit:contain;flex:none}
+  .tile{position:relative;width:92px;display:flex;flex-direction:column;align-items:center}
+  .tile .pic{width:72px;height:72px;border:3px solid var(--ink);border-radius:3px;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;transition:filter .3s}
+  .tile .pic img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}
+  .tile .nm{font-size:14px;line-height:1.1;margin-top:3px;white-space:nowrap;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
+  .tile .chk{position:absolute;top:-9px;right:1px;width:30px;height:30px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.4);
+    display:flex;align-items:center;justify-content:center;transform:scale(0);z-index:2}
+  .tile .chk svg{width:18px;height:18px}
+  .tile.found .chk{animation:pop .45s cubic-bezier(.3,1.6,.5,1) forwards}
+  .tile.found .pic{filter:saturate(.6)}
+  .tile.found .nm{text-decoration:line-through}
+  @keyframes pop{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(0)}}
+
+  #status{margin-top:auto;padding-top:8px;display:flex;align-items:baseline;gap:10px;font-size:16px}
+  #timer{font-size:34px;line-height:1;font-variant-numeric:tabular-nums;font-family:'Patrick Hand SC',var(--font);letter-spacing:1px}
+  #timer.done{color:var(--green)}
+  #count{color:#555}
+
+  #bonusRow{grid-column:1/4;margin-top:4px;border-top:2px dashed #999;padding-top:6px;display:flex;align-items:center;gap:10px;font-size:17px}
+  #bonusRow .pic{width:48px;height:48px;border:3px solid var(--gold);border-radius:50%;background:#fff6c7;overflow:hidden;flex:none}
+  #bonusRow .pic img{width:100%;height:100%;object-fit:cover}
+  #bonusRow b{color:#b07d00}
+
+  #cardToggle{position:absolute;right:-3px;bottom:-30px;font-size:14px;padding:2px 10px;background:var(--paper);border:3px solid var(--ink);border-top:none;border-radius:0 0 6px 6px}
+  #card.collapsed{grid-template-rows:auto}
+  #card.collapsed .greeting,#card.collapsed .bottomleft,#card.collapsed #status,#card.collapsed #bonusRow{display:none}
+  #card.collapsed{grid-template-columns:repeat(4,92px);width:auto}
+  #card.collapsed .tile{grid-column:auto;grid-row:auto}
+  #card.collapsed #miniStatus{display:flex}
+  #miniStatus{display:none;grid-column:1/-1;justify-content:space-between;font-size:18px}
+
+  /* ---------- controls (bottom-right) ---------- */
+  #controls{position:absolute;right:14px;bottom:14px;display:flex;gap:8px;z-index:5}
+  #controls button{width:50px;height:50px;font-size:22px;background:var(--paper);border:3px solid var(--ink);border-radius:50%;box-shadow:3px 3px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:0}
+  #controls button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,.35)}
+  #controls button.wide{width:auto;padding:0 16px;border-radius:999px;font-size:20px;background:#fff6c7}
+  #controls button svg{width:24px;height:24px}
+  #tip{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:6px 16px;border-radius:999px;font-size:17px;z-index:4;pointer-events:none;transition:opacity .5s}
+  #tip.fade{opacity:0}
+
+  /* ---------- toast + win ---------- */
+  #toast{position:absolute;left:50%;top:14px;transform:translate(-50%,-150%);background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:8px 22px;font-size:22px;
+    box-shadow:4px 4px 0 rgba(0,0,0,.35);z-index:9;transition:transform .35s cubic-bezier(.3,1.4,.5,1);white-space:nowrap}
+  #toast.show{transform:translate(-50%,0)}
+  #win{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:20}
+  #win .box{background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:26px 34px;text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);max-width:92vw;transform:rotate(-1.5deg);animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
+  #win h1{margin:0 0 4px;font-size:44px;color:var(--red);line-height:1}
+  #win .time{font-size:56px;color:var(--blue);line-height:1.1;font-family:'Patrick Hand SC',var(--font)}
+  #win p{margin:6px 0;font-size:19px}
+  #win .best{color:#b07d00}
+  #win .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  #win button{font-size:22px;padding:8px 22px;border:3px solid var(--ink);border-radius:999px;box-shadow:3px 3px 0 var(--ink);background:var(--paper)}
+  #win button.primary{background:var(--red);color:#fff}
+  #win button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:21}
+
+  @media (max-width:640px){
+    #card{width:auto;grid-template-columns:1fr 72px 72px;padding:8px 10px}
+    #card h1{font-size:19px}#card p{font-size:13px}
+    .tile{width:72px}.tile .pic{width:56px;height:56px}.tile .nm{font-size:12px}
+    #timer{font-size:26px}#status{font-size:13px}
+    #card .logo{width:52px;height:52px}
+  }
+</style>
+</head>
+<body>
+
+<div id="title">
+  <img class="cover" src="img/cover.webp" alt="Where's Waldo? Ashland Edition cover">
+  <div class="box">
+    <h1><span class="w">WHERE'S</span> <span class="r">WALDO?</span></h1>
+    <h2>Ashland Elementary Edition</h2>
+    <p>Seven of your teachers are hiding somewhere around the school.<br>
+       Find them all as fast as you can!<br>
+       <small>Drag to look around &bull; scroll or pinch to zoom &bull; tap a teacher when you spot one.</small></p>
+    <button id="start" disabled>Loading&hellip;</button>
+  </div>
+</div>
+
+<div id="stage" class="hide">
+  <div id="viewport">
+    <div id="world">
+      <img id="bg" src="img/bg.webp" alt="" draggable="false">
+    </div>
+  </div>
+
+  <div id="card">
+    <div class="greeting">
+      <h1>Greetings 4th and 5th Graders,</h1>
+      <p>Your teachers have hidden themselves. Now, where could they be? I wonder who else could be hiding in this image?</p>
+      <div id="status">
+        <div id="timer">0:00</div>
+        <div id="count">0 / 7 found</div>
+      </div>
+    </div>
+    <div class="bottomleft">
+      <img class="logo" src="img/logo.webp" alt="Ashland Elementary">
+      <!-- tile 5 is inserted here by script -->
+    </div>
+    <div id="bonusRow" class="hide"></div>
+    <div id="miniStatus"><span id="timer2">0:00</span><span id="count2">0 / 7</span></div>
+    <button id="cardToggle" title="Hide / show the card">hide ▲</button>
+  </div>
+
+  <div id="tip">Drag to look around &bull; scroll or pinch to zoom</div>
+
+  <div id="controls">
+    <button id="hintBtn" class="wide" title="Get a hint (adds 15 seconds)">💡 Hint +15s</button>
+    <button id="zoomIn" title="Zoom in">+</button>
+    <button id="zoomOut" title="Zoom out">−</button>
+    <button id="zoomFit" title="See the whole picture">⤢</button>
+    <button id="soundBtn" title="Sound on/off">🔊</button>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<div id="win" class="hide">
+  <div class="box">
+    <h1 id="winTitle">You found everyone!</h1>
+    <div class="time" id="winTime">0:00</div>
+    <p id="winBest" class="best"></p>
+    <p id="winBonus"></p>
+    <div class="btns">
+      <button id="keepLooking">Keep looking 🔍</button>
+      <button id="again" class="primary">Play again</button>
+    </div>
+  </div>
+</div>
+<canvas id="confetti" class="hide"></canvas>
+
+<script>
+(() => {
+'use strict';
+const W = 6300, H = 3600;
+
+/* Characters. ar = width/height of the cutout, hf = how tall this pose is vs. a standing person. */
+const TEACHERS = [
+  { id:'piercey', name:'Mr. Piercey',  ar:261/500, hf:1.00, color:'#3d8ee6' },
+  { id:'yoo',     name:'Mrs. Yoo',     ar:180/500, hf:0.86, color:'#3fc24f' },
+  { id:'laborio', name:'Mrs. Laborio', ar:171/500, hf:0.96, color:'#e23b3b' },
+  { id:'white',   name:'Ms. White',    ar:188/500, hf:0.80, color:'#f7d12a' },
+  { id:'gaddis',  name:'Mrs. Gaddis',  ar:299/500, hf:0.92, color:'#5fc5e8' },
+  { id:'hill',    name:'Mrs. Hill',    ar:246/500, hf:0.90, color:'#6fd36a' },
+  { id:'givan',   name:'Mr. Givan',    ar:259/500, hf:0.95, color:'#f28a1e' },
+];
+const BONUS = [
+  { id:'richards', name:'Mr. Richards',   ar:144/500, hf:1.00 },
+  { id:'rampulla', name:'Mr. Rampulla',   ar:323/500, hf:0.96, noflip:true },
+  { id:'eddie',    name:'Eddie the Eagle', ar:500/445, hf:0.92 },
+];
+
+/* Hand-picked hiding spots: [x, y] is where the character's feet go (image pixels).
+   Every spot is on ground a person could actually stand on: sidewalks, lawns, driveways,
+   playgrounds, the school entrance, the crosswalk. Nothing on roofs or in trees. */
+const SPOTS = [
+  [345,2925],[1275,1620],[1845,1020],[1725,345],[2460,225],[2595,435],[3150,570],[3525,705],
+  [2550,840],[3090,795],[5040,330],[5700,630],[5550,495],[5280,840],[6150,1380],[6075,1680],
+  [1500,2175],[1800,3000],[1050,3405],[1180,2640],[375,3450],[3255,2400],[3450,2550],[2700,2850],
+  [3750,2460],[3600,2670],[2940,2505],[5295,1890],[4650,2250],[5550,3150],[6150,3525],[6075,2925],
+  [4650,3450],[1575,1725],[2325,2330],[2280,3450],
+];
+/* Perspective: people lower in the picture are closer to us, so they're drawn bigger. */
+const standingHeight = y => 120 + 120 * (y / H);
+const MIN_SPOT_GAP = 420;
+const HINT_PENALTY = 15;
+
+/* ---------- DOM ---------- */
+const $ = id => document.getElementById(id);
+const title = $('title'), stage = $('stage'), vp = $('viewport'), world = $('world'), bgImg = $('bg');
+const card = $('card'), bottomLeft = card.querySelector('.bottomleft');
+const timerEl = $('timer'), timer2 = $('timer2'), countEl = $('count'), count2 = $('count2');
+const tip = $('tip'), toast = $('toast'), winEl = $('win');
+
+/* ---------- sound (synthesized, no audio files) ---------- */
+let actx = null, soundOn = localStorage.getItem('ww_sound') !== 'off';
+function audio(){ if(!actx){ actx = new (window.AudioContext||window.webkitAudioContext)(); } if(actx.state==='suspended') actx.resume(); return actx; }
+function tone(freq, t0, dur, type='sine', vol=0.25, slide=null){
+  const ac = audio(), o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, ac.currentTime + t0);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide, ac.currentTime + t0 + dur);
+  g.gain.setValueAtTime(0.0001, ac.currentTime + t0);
+  g.gain.exponentialRampToValueAtTime(vol, ac.currentTime + t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t0 + dur);
+  o.connect(g).connect(ac.destination); o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + 0.05);
+}
+const SFX = {
+  found(){ tone(784,0,.18,'triangle',.3); tone(1175,.12,.28,'triangle',.3); tone(1568,.24,.4,'sine',.22); },
+  miss(){ tone(180,0,.18,'square',.12,90); },
+  bonus(){ [880,1109,1319,1760,2217].forEach((f,i)=>tone(f,i*.07,.3,'triangle',.22)); tone(2637,.4,.6,'sine',.18); },
+  win(){ const n=[523,659,784,1047,784,1047,1319]; n.forEach((f,i)=>tone(f,i*.13,.35,'triangle',.28));
+         [1047,1319,1568,2093].forEach(f=>tone(f,1.0,1.2,'sine',.14)); },
+  start(){ tone(440,0,.12,'triangle',.2); tone(660,.1,.2,'triangle',.2); },
+  hint(){ tone(600,0,.12,'sine',.2,900); tone(900,.12,.25,'sine',.2); },
+  click(){ tone(1200,0,.05,'sine',.08); },
+};
+function play(name){ if(soundOn){ try{ SFX[name](); }catch(e){} } }
+function setSoundBtn(){ $('soundBtn').textContent = soundOn ? '🔊' : '🔇'; }
+$('soundBtn').onclick = () => { soundOn = !soundOn; localStorage.setItem('ww_sound', soundOn?'on':'off'); setSoundBtn(); if(soundOn) play('click'); };
+setSoundBtn();
+
+/* ---------- pan / zoom ---------- */
+let s = 1, tx = 0, ty = 0, minS = 0.1, MAX_ZOOM = 6;
+function vpRect(){ return vp.getBoundingClientRect(); }
+function clampView(){
+  const r = vpRect(), w = W*s, h = H*s;
+  tx = w <= r.width  ? (r.width  - w)/2 : Math.min(0, Math.max(r.width  - w, tx));
+  ty = h <= r.height ? (r.height - h)/2 : Math.min(0, Math.max(r.height - h, ty));
+}
+function apply(){ clampView(); world.style.transform = `translate(${tx}px,${ty}px) scale(${s})`; }
+function fit(){ const r = vpRect(); minS = Math.min(r.width/W, r.height/H); s = minS; apply(); }
+function zoomAt(cx, cy, factor){
+  const ns = Math.max(minS, Math.min(minS*MAX_ZOOM, s*factor));
+  tx = cx - (cx - tx) * ns/s; ty = cy - (cy - ty) * ns/s; s = ns; apply();
+}
+function smooth(fn){ world.classList.add('smooth'); fn(); setTimeout(()=>world.classList.remove('smooth'), 600); }
+function centerOn(wx, wy, ns){ const r = vpRect(); s = Math.max(minS, Math.min(minS*MAX_ZOOM, ns)); tx = r.width/2 - wx*s; ty = r.height/2 - wy*s; apply(); }
+window.addEventListener('resize', () => { const r = vpRect(); const nm = Math.min(r.width/W, r.height/H); if(s <= minS+1e-6){ minS = nm; s = nm; } else { minS = nm; s = Math.max(s, minS); } apply(); });
+
+vp.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = vpRect(); const f = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0018));
+  zoomAt(e.clientX - r.left, e.clientY - r.top, f);
+}, { passive:false });
+
+const pointers = new Map(); let pinchDist = 0, pinchMid = null, downPos = null, moved = 0, downTime = 0;
+vp.addEventListener('pointerdown', e => {
+  vp.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if(pointers.size === 1){ downPos = { x:e.clientX, y:e.clientY }; moved = 0; downTime = performance.now(); vp.classList.add('dragging'); }
+  if(pointers.size === 2){ const [a,b] = [...pointers.values()]; pinchDist = Math.hypot(a.x-b.x, a.y-b.y); pinchMid = { x:(a.x+b.x)/2, y:(a.y+b.y)/2 }; }
+});
+vp.addEventListener('pointermove', e => {
+  if(!pointers.has(e.pointerId)) return;
+  const prev = pointers.get(e.pointerId); pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if(pointers.size === 1){
+    tx += e.clientX - prev.x; ty += e.clientY - prev.y; moved += Math.hypot(e.clientX-prev.x, e.clientY-prev.y); apply();
+  } else if(pointers.size === 2){
+    const [a,b] = [...pointers.values()]; const d = Math.hypot(a.x-b.x, a.y-b.y); const mid = { x:(a.x+b.x)/2, y:(a.y+b.y)/2 };
+    const r = vpRect(); tx += mid.x - pinchMid.x; ty += mid.y - pinchMid.y;
+    if(pinchDist > 0) zoomAt(mid.x - r.left, mid.y - r.top, d / pinchDist); else apply();
+    pinchDist = d; pinchMid = mid; moved += 10;
+  }
+});
+function endPointer(e){
+  if(!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId);
+  if(pointers.size === 0){
+    vp.classList.remove('dragging');
+    if(downPos && moved < 8 && performance.now() - downTime < 700 && e.type === 'pointerup'){
+      const r = vpRect(); handleClick((e.clientX - r.left - tx)/s, (e.clientY - r.top - ty)/s);
+    }
+    downPos = null;
+  } else if(pointers.size === 1){ pinchDist = 0; moved = 10; }
+}
+vp.addEventListener('pointerup', endPointer); vp.addEventListener('pointercancel', endPointer);
+$('zoomIn').onclick  = () => { play('click'); const r = vpRect(); smooth(()=>zoomAt(r.width/2, r.height/2, 1.6)); };
+$('zoomOut').onclick = () => { play('click'); const r = vpRect(); smooth(()=>zoomAt(r.width/2, r.height/2, 1/1.6)); };
+$('zoomFit').onclick = () => { play('click'); smooth(fit); };
+
+/* ---------- game state ---------- */
+let chars = [], foundCount = 0, bonusChar = null, running = false, startTime = 0, penalty = 0, finalMs = 0, rafId = 0;
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const fmt = ms => { const t = Math.floor(ms/1000); return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`; };
+
+function pickSpots(n){
+  for(let attempt=0; attempt<50; attempt++){
+    const pool = shuffle(SPOTS.slice()), out = [];
+    for(const p of pool){ if(out.every(q => Math.hypot(p[0]-q[0], p[1]-q[1]) >= MIN_SPOT_GAP)) out.push(p); if(out.length === n) return out; }
+  }
+  return shuffle(SPOTS.slice()).slice(0, n);
+}
+
+function buildTiles(){
+  card.querySelectorAll('.tile').forEach(t => t.remove());
+  TEACHERS.forEach((t, i) => {
+    const el = document.createElement('div'); el.className = 'tile'; el.id = 'tile-' + t.id;
+    el.innerHTML = `<div class="pic" style="background:${t.color}"><img src="img/h/${t.id}.webp" alt=""></div><div class="nm">${t.name}</div>
+      <div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>`;
+    /* tiles 1-4 sit in the two right-hand columns, tile 5 beside the logo, tiles 6-7 in the last row */
+    if(i < 4){ el.style.gridColumn = String(2 + (i % 2)); el.style.gridRow = String(1 + Math.floor(i/2)); card.insertBefore(el, bottomLeft); }
+    else if(i === 4){ bottomLeft.appendChild(el); }
+    else { el.style.gridColumn = String(2 + (i - 5)); el.style.gridRow = '3'; card.insertBefore(el, $('bonusRow')); }
+  });
+}
+
+function placeChar(def, spot, isBonus){
+  const h = standingHeight(spot[1]) * def.hf, w = h * def.ar;
+  const el = document.createElement('div'); el.className = 'char';
+  el.style.cssText = `left:${spot[0]-w/2}px;top:${spot[1]-h}px;width:${w}px;height:${h}px;background-image:url(img/c/${def.id}.webp)`;
+  if(!def.noflip && Math.random() < 0.5) el.classList.add('flip');
+  el.innerHTML = '<div class="ring"></div>';
+  world.appendChild(el);
+  return { def, x:spot[0], y:spot[1], w, h, el, found:false, bonus:isBonus };
+}
+
+function newGame(){
+  world.querySelectorAll('.char, .ripple').forEach(e => e.remove());
+  chars = []; foundCount = 0; penalty = 0; finalMs = 0; running = true;
+  $('bonusRow').classList.add('hide'); $('bonusRow').innerHTML = '';
+  timerEl.classList.remove('done');
+  buildTiles();
+  const spots = pickSpots(TEACHERS.length + 1);
+  TEACHERS.forEach((t, i) => chars.push(placeChar(t, spots[i], false)));
+  bonusChar = placeChar(BONUS[Math.floor(Math.random()*BONUS.length)], spots[TEACHERS.length], true);
+  chars.push(bonusChar);
+  updateCount();
+  fit();
+  startTime = performance.now();
+  cancelAnimationFrame(rafId); tick();
+  tip.classList.remove('fade'); setTimeout(() => tip.classList.add('fade'), 5000);
+}
+
+function elapsed(){ return (running ? performance.now() - startTime : finalMs) + penalty*1000; }
+function tick(){ const t = fmt(elapsed()); timerEl.textContent = t; timer2.textContent = t; if(running) rafId = requestAnimationFrame(tick); }
+function updateCount(){ countEl.textContent = `${foundCount} / ${TEACHERS.length} found`; count2.textContent = `${foundCount} / ${TEACHERS.length}`; }
+
+function handleClick(wx, wy){
+  if(wx < 0 || wy < 0 || wx > W || wy > H) return;
+  /* generous hit box so small fingers on tiny teachers still count */
+  const pad = 18 / Math.max(1, s/minS) + 8;
+  const hit = chars.find(c => !c.found && wx >= c.x - c.w/2 - pad && wx <= c.x + c.w/2 + pad && wy >= c.y - c.h - pad && wy <= c.y + pad);
+  if(hit){ found(hit); return; }
+  if(!running && foundCount >= TEACHERS.length && bonusChar.found) return;
+  play('miss');
+  const r = document.createElement('div'); r.className = 'ripple';
+  const k = Math.max(0.5, 1/(s/minS)); r.style.cssText = `left:${wx}px;top:${wy}px;transform:scale(${k})`;
+  world.appendChild(r); setTimeout(() => r.remove(), 600);
+}
+
+function found(c){
+  c.found = true; c.el.classList.add('found');
+  if(c.bonus){
+    play('bonus');
+    const row = $('bonusRow'); row.classList.remove('hide');
+    row.innerHTML = `<div class="pic"><img src="img/h/${c.def.id}.webp" alt=""></div><div><b>⭐ BONUS!</b> You spotted <b>${c.def.name}</b> hiding too!</div>`;
+    showToast(`⭐ Bonus! You found ${c.def.name}!`);
+    if(!running && foundCount >= TEACHERS.length) setTimeout(showWin, 900);
+    return;
+  }
+  play('found');
+  foundCount++; updateCount();
+  $('tile-' + c.def.id).classList.add('found');
+  if(foundCount >= TEACHERS.length){
+    running = false; finalMs = performance.now() - startTime; tick(); timerEl.classList.add('done');
+    setTimeout(() => { play('win'); showWin(); confetti(); }, 700);
+  } else {
+    showToast(`You found ${c.def.name}!`);
+  }
+}
+
+let toastT = 0;
+function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('show'), 2200); }
+
+function showWin(){
+  const ms = elapsed(); $('winTime').textContent = fmt(ms);
+  const best = Number(localStorage.getItem('ww_best') || 0);
+  if(!best || ms < best){ localStorage.setItem('ww_best', String(ms)); $('winBest').textContent = best ? '🏆 New best time!' : '🏆 Your first time on the board!'; }
+  else $('winBest').textContent = `Best time so far: ${fmt(best)}`;
+  if(bonusChar.found){ $('winBonus').textContent = `⭐ And you found the secret visitor, ${bonusChar.def.name}!`; $('keepLooking').classList.add('hide'); }
+  else { $('winBonus').textContent = `Psst… someone else is still hiding in the picture!`; $('keepLooking').classList.remove('hide'); }
+  winEl.classList.remove('hide');
+}
+$('keepLooking').onclick = () => { play('click'); winEl.classList.add('hide'); };
+$('again').onclick = () => { play('start'); winEl.classList.add('hide'); newGame(); };
+
+$('hintBtn').onclick = () => {
+  const left = chars.filter(c => !c.found && !c.bonus);
+  if(!left.length) return;
+  const c = left[Math.floor(Math.random()*left.length)];
+  if(running) penalty += HINT_PENALTY;
+  play('hint'); showToast(`Hint: look around here… (+${HINT_PENALTY}s)`);
+  const ox = (Math.random()-0.5) * 700, oy = (Math.random()-0.5) * 450;
+  smooth(() => centerOn(c.x + ox, c.y + oy, minS * 2.6));
+};
+
+$('cardToggle').onclick = () => { card.classList.toggle('collapsed'); $('cardToggle').textContent = card.classList.contains('collapsed') ? 'show ▼' : 'hide ▲'; play('click'); };
+
+/* ---------- confetti ---------- */
+function confetti(){
+  const cv = $('confetti'), ctx = cv.getContext('2d'); cv.classList.remove('hide');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const colors = ['#d2232a','#1d6fb8','#f5b800','#1f9d3a','#fff','#f28a1e'];
+  const ps = Array.from({length:180}, () => ({ x:Math.random()*cv.width, y:-20-Math.random()*cv.height*0.5, vx:(Math.random()-0.5)*3, vy:2+Math.random()*4, r:4+Math.random()*6, c:colors[Math.floor(Math.random()*colors.length)], a:Math.random()*6.28, va:(Math.random()-0.5)*0.3 }));
+  const t0 = performance.now();
+  (function frame(){
+    const t = performance.now() - t0; ctx.clearRect(0,0,cv.width,cv.height);
+    for(const p of ps){ p.x += p.vx; p.y += p.vy; p.a += p.va; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r); ctx.restore(); }
+    if(t < 4500) requestAnimationFrame(frame); else cv.classList.add('hide');
+  })();
+}
+
+/* ---------- boot ---------- */
+const preload = [...TEACHERS, ...BONUS].map(t => { const i = new Image(); i.src = `img/c/${t.id}.webp`; return i; });
+function ready(){ const b = $('start'); b.disabled = false; b.textContent = 'Start searching!'; }
+if(bgImg.complete && bgImg.naturalWidth) ready(); else { bgImg.onload = ready; bgImg.onerror = ready; }
+$('start').onclick = () => { audio(); play('start'); title.classList.add('hide'); stage.classList.remove('hide'); newGame(); };
+})();
+</script>
+</body>
+</html>
