@@ -237,6 +237,8 @@ const BONUS = [
   { id:'richards', name:'Mr. Richards',   ar:144/500, hf:1.00 },
   { id:'rampulla', name:'Mr. Rampulla',   ar:323/500, hf:0.96, noflip:true },
   { id:'eddie',    name:'Eddie the Eagle', ar:500/445, hf:0.92 },
+  { id:'walkertodd', name:'Mrs. Walker and Mrs. Todd', ar:251/500, hf:1.00, noflip:true, pair:true },  /* Principal + Assistant Principal, one cutout so they're always together */
+  { id:'lewis',    name:'Mrs. Lewis',      ar:207/500, hf:0.97, noflip:true },
 ];
 
 /* Scenes. Each has hand-picked hiding spots: [x, y] is where the character's feet go (image pixels).
@@ -495,7 +497,7 @@ function showWin(){
   if(!best || ms < best){ try { localStorage.setItem(key, String(ms)); } catch(e){} $('winBest').textContent = best ? '🎉 Your new personal best here!' : ''; }
   else $('winBest').textContent = `Your best here: ${fmt(best)}`;
   showLeaderboard(ms);
-  if(bonusChar.found){ $('winBonus').textContent = `⭐ And you found the secret visitor, ${bonusChar.def.name}!`; $('keepLooking').classList.add('hide'); }
+  if(bonusChar.found){ $('winBonus').textContent = `⭐ And you found the secret ${bonusChar.def.pair ? 'visitors' : 'visitor'}, ${bonusChar.def.name}!`; $('keepLooking').classList.add('hide'); }
   else { $('winBonus').textContent = `Psst… someone else is still hiding in the picture!`; $('keepLooking').classList.remove('hide'); }
   winEl.classList.remove('hide');
 }
