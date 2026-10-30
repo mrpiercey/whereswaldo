@@ -3,7 +3,7 @@
 A find-the-teachers game for 4th and 5th graders. Live at https://waldo.ashlandthegame.com (GitHub Pages with a custom domain, set by the `CNAME` file and a GoDaddy CNAME record `waldo` pointing to `mrpiercey.github.io`).
 
 - Players pick a scene on the title page: Ashland Elementary, Downtown Lexington, or Kroger Field. After finishing, they pick the next one.
-- Each scene has its own Top 10 leaderboard in Firestore (project ashlandthegame, path `waldo/{scene}/scores`). Only a top-10 time can be saved, and only as two capital letters (first and last initial). "FU" is blocked in the game and in `firestore.rules`. To block more combos, add them to `BLOCKED_INITIALS` in `index.html` and the list in `firestore.rules`, then run `firebase deploy --only firestore:rules`.
+- Each scene has its own Top 50 leaderboard in Firestore (project ashlandthegame, path `waldo/{scene}/scores`). Only a top-50 time can be saved, and only as two capital letters (first and last initial). "FU" is blocked in the game and in `firestore.rules`. To block more combos, add them to `BLOCKED_INITIALS` in `index.html` and the list in `firestore.rules`, then run `firebase deploy --only firestore:rules`.
 - To remove a score: `firebase firestore:delete waldo/<scene>/scores/<id> --project ashlandthegame` or delete it in the Firebase console.
 - Every round hides the same 7 teachers (Piercey, Yoo, Laborio, White, Gaddis, Hill, Givan) in a fresh set of spots.
 - One secret bonus visitor is also hidden each round, picked at random: Mr. Richards, Mr. Rampulla, Eddie the Eagle, Mrs. Lewis, or Mrs. Walker and Mrs. Todd (one cutout, so the principal and assistant principal always appear together). Players are not told who.
