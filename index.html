@@ -614,13 +614,15 @@ $('lbSave').onclick = async () => {
 function buildCrowd(){
   const people = [...TEACHERS, ...BONUS], el = $('crowd'), W = innerWidth, H = innerHeight;
   const h = Math.max(90, Math.min(150, H / 5)), stepX = h * 0.42, stepY = h * 0.55;
-  let html = '', n = 0, row = 0;
+  /* shuffled bags so everyone shows up about equally, in no pattern */
+  let html = '', bag = [], row = 0;
+  const next = () => { if(!bag.length) bag = [...people].sort(() => Math.random() - .5); return bag.pop(); };
   for(let y = -h * 0.4; y < H + h * 0.2; y += stepY, row++){
     for(let x = -stepX * (row % 2 ? 0.5 : 1); x < W + stepX; x += stepX){
-      const p = people[(n * 7 + row * 5) % people.length]; n++;
+      const p = next();
       const ph = h * p.hf * (0.9 + Math.random() * 0.2), pw = ph * p.ar;
       const flip = !p.noflip && Math.random() < 0.5 ? 'transform:scaleX(-1);' : '';
-      html += `<img src="img/c/${p.id}.webp" alt="" style="left:${x + (Math.random() - .5) * stepX * .6 - pw / 2}px;top:${y + (Math.random() - .5) * stepY * .4}px;width:${pw}px;height:${ph}px;${flip}">`;
+      html += `<img src="img/c/${p.id}.webp" alt="" style="left:${x + (Math.random() - .5) * stepX * 1.2 - pw / 2}px;top:${y + (Math.random() - .5) * stepY * .8}px;width:${pw}px;height:${ph}px;${flip}">`;
     }
   }
   el.innerHTML = html;
