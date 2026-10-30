@@ -1,6 +1,6 @@
 # Where's Waldo? Ashland Elementary Edition
 
-A find-the-teachers game for 4th and 5th graders. Open `index.html` (or host it on GitHub Pages).
+A find-the-teachers game for 4th and 5th graders. Live at https://waldo.ashlandthegame.com (GitHub Pages with a custom domain, set by the `CNAME` file and a GoDaddy CNAME record `waldo` pointing to `mrpiercey.github.io`).
 
 - Each round is played on one of two scenes, Ashland Elementary or Downtown Lexington, switching every round.
 - Every round hides the same 7 teachers (Piercey, Yoo, Laborio, White, Gaddis, Hill, Givan) in a fresh set of spots.
