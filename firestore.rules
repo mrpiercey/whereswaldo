@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Where's Waldo leaderboards (Top 100, reset 2026-10-31): /waldo/{scene}/top100/{id} = { initials: "AB", ms: 83000 }
     match /waldo/{scene}/top100/{id} {
-      allow read: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton', 'rupp'];
-      allow create: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton', 'rupp']
+      allow read: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton', 'rupp', 'kenwick', 'eastend', 'bellcourt'];
+      allow create: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton', 'rupp', 'kenwick', 'eastend', 'bellcourt']
         && request.resource.data.keys().hasOnly(['initials', 'ms'])
         && request.resource.data.keys().hasAll(['initials', 'ms'])
         && request.resource.data.initials is string

@@ -27,7 +27,9 @@
   #title .box{z-index:1;margin:auto 0;flex:none}
   #title .stamp{position:absolute;top:-30px;right:-26px;width:104px;height:104px;box-sizing:border-box;padding:4px;background:#fff;border:3px solid var(--ink);border-radius:50%;transform:rotate(14deg);box-shadow:3px 4px 0 rgba(0,0,0,.3);pointer-events:none}
   #title .box{position:relative;background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:22px 28px 26px;
-    max-width:min(92vw,560px);text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);transform:rotate(-2deg)}
+    /* wide enough for 5 places per row so 9+ places stay on screen */
+    max-width:min(94vw,920px);text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);transform:rotate(-2deg)}
+  #title .box > p{max-width:560px;margin-left:auto;margin-right:auto}
   #title h1{margin:0 0 6px;font-size:clamp(28px,5vw,44px);line-height:1;letter-spacing:1px}
   #title h1 .w{color:var(--blue)}#title h1 .r{color:var(--red)}
   #title h2{margin:0 0 10px;font-size:clamp(18px,3vw,24px);color:var(--red)}
@@ -363,6 +365,30 @@ const SCENES = [
       [2380,370],[2200,420],[2100,430],[1850,485],[2420,470],[2000,570],[1500,590],[2240,660],[2650,560],
       [100,840],[400,950],[600,880],[160,1070],[840,1250],[150,1300],[860,1430],
       [1700,820],[1900,1060],[2100,1040],[2350,980],[2600,1000],[2200,1200],[2400,1260],[2050,1130],[2550,1150],
+    ] },
+  { id:'kenwick', level:1, name:'Kenwick', bg:'img/bg-kenwick.webp', W:2752, H:1536, gap:150, maxZoom:8, hintZoom:4,
+    size: y => 40 + 10 * (y / 1536),  /* close-up neighborhood, so people are big */
+    spots:[
+      [640,470],[900,420],[1150,380],[1300,350],[230,600],[60,320],
+      [1976,430],[2176,360],[2376,300],[2576,220],[1476,320],[1676,470],[1526,620],[1576,700],
+      [600,1018],[740,1210],[850,1288],[1010,1460],[560,1098],[150,1268],[780,1018],
+      [2076,918],[1950,1040],[2376,1098],[2576,1218],[2606,1058],[2626,1328],[1476,1248],[1756,828],[2146,908],
+    ] },
+  { id:'eastend', level:2, name:'The East End', bg:'img/bg-eastend.webp', W:2752, H:1536, gap:150, maxZoom:10, hintZoom:5,
+    size: y => 30 + 8 * (y / 1536),
+    spots:[
+      [300,620],[600,590],[850,540],[450,650],[880,530],[700,720],
+      [1456,560],[1876,560],[2226,650],[1646,640],
+      [500,1168],[720,1168],[450,1288],[100,1218],[1200,1188],[900,1138],[780,1348],[150,1018],
+      [1576,958],[2176,1018],[2326,908],[2076,1268],[2626,1368],[1456,1238],[2676,1118],
+    ] },
+  { id:'bellcourt', level:1, name:'Bell Court', bg:'img/bg-bellcourt.webp', W:2752, H:1536, gap:150, maxZoom:8, hintZoom:4,
+    size: y => 38 + 10 * (y / 1536),  /* close-up neighborhood, so people are big */
+    spots:[
+      [300,400],[150,420],[450,385],[700,420],[760,560],[790,680],[1050,620],[1200,620],[1000,700],[1150,700],[210,170],
+      [2226,420],[2676,350],[2626,60],[1876,640],[2376,620],[1576,640],[2156,340],
+      [300,868],[150,908],[450,848],[950,1068],[960,1268],[1050,1468],[800,1500],[1150,1418],[1250,1478],[1300,958],
+      [1776,858],[1526,918],[2076,798],[1556,1428],
     ] },
 ];
 let scene = SCENES[0];
