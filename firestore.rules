@@ -1,10 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Where's Waldo leaderboards: /waldo/{scene}/scores/{id} = { initials: "AB", ms: 83000 }
-    match /waldo/{scene}/scores/{id} {
-      allow read: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton'];
-      allow create: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton']
+    // Where's Waldo leaderboards (Top 100, reset 2026-10-31): /waldo/{scene}/top100/{id} = { initials: "AB", ms: 83000 }
+    match /waldo/{scene}/top100/{id} {
+      allow read: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton', 'rupp'];
+      allow create: if scene in ['school', 'lex', 'kroger', 'keeneland', 'uk', 'gatton', 'rupp']
         && request.resource.data.keys().hasOnly(['initials', 'ms'])
         && request.resource.data.keys().hasAll(['initials', 'ms'])
         && request.resource.data.initials is string

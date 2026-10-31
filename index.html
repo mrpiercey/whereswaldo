@@ -257,9 +257,9 @@
     <p id="winBonus"></p>
     <div class="btns"><button id="keepLooking">Keep looking 🔍</button></div>
     <div class="lb">
-      <h3 id="lbTitle">🏆 Top 50</h3>
+      <h3 id="lbTitle">🏆 Top 100</h3>
       <div id="lbEntry" class="hide">
-        <p class="lbYay">You made the Top 50! Type your first and last initial:</p>
+        <p class="lbYay">You made the Top 100! Type your first and last initial:</p>
         <div class="ini">
           <input id="ini1" maxlength="1" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="First initial" placeholder="?">
           <input id="ini2" maxlength="1" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="Last initial" placeholder="?">
@@ -347,6 +347,14 @@ const SCENES = [
       [1756,340],[1976,330],[2276,380],[2026,640],[2176,640],[1806,540],[1956,560],[1436,450],[2426,420],
       [280,1048],[770,1368],[900,1408],[1050,1368],[1200,1290],[850,1148],[450,1468],[560,1088],
       [2176,1048],[2376,1118],[2476,1248],[2076,1008],[2576,1008],[2376,958],[1596,1188],[1966,1148],[1426,1308],[1806,938],[2526,1428],
+    ] },
+  { id:'rupp', name:'Rupp Arena', bg:'img/bg-rupp.webp', W:2752, H:1536, gap:150, maxZoom:10, hintZoom:5,
+    size: y => 14 + 24 * (y / 1536),
+    spots:[
+      [780,265],[560,250],[1080,640],[1260,640],[1330,655],
+      [2380,370],[2200,420],[2100,430],[1850,485],[2420,470],[2000,570],[1500,590],[2240,660],[2650,560],
+      [100,840],[400,950],[600,880],[160,1070],[840,1250],[150,1300],[860,1430],
+      [1700,820],[1900,1060],[2100,1040],[2350,980],[2600,1000],[2200,1200],[2400,1260],[2050,1130],[2550,1150],
     ] },
 ];
 let scene = SCENES[0];
@@ -615,17 +623,18 @@ $('keepLooking').onclick = () => { play('click'); winEl.classList.add('hide'); }
 /* ---------- leaderboard (Firestore, one top-50 board per scene) ---------- */
 const LB_URL = 'https://firestore.googleapis.com/v1/projects/ashlandthegame/databases/(default)/documents';
 const LB_KEY = 'AIzaSyBVdZf1v3oKmXeI9W7aJHDpXZ7q0D5mMJA';
-const LB_SIZE = 50;
+const LB_SIZE = 100;
+const LB_COLL = 'top100';   /* leaderboard reset 2026-10-31; old Top 50 scores are still in waldo/{scene}/scores */
 const BLOCKED_INITIALS = ['FU'];   /* also blocked in firestore.rules */
 let submitted = false, myDocId = null, lbToken = 0;
 async function lbTop(sceneId, limit = LB_SIZE){
   const r = await fetch(`${LB_URL}/waldo/${sceneId}:runQuery?key=${LB_KEY}`, { method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ structuredQuery:{ from:[{collectionId:'scores'}], orderBy:[{field:{fieldPath:'ms'},direction:'ASCENDING'}], limit } }) });
+    body: JSON.stringify({ structuredQuery:{ from:[{collectionId:LB_COLL}], orderBy:[{field:{fieldPath:'ms'},direction:'ASCENDING'}], limit } }) });
   if(!r.ok) throw new Error('lb ' + r.status);
   return (await r.json()).filter(x => x.document).map(x => ({ id:x.document.name, initials:x.document.fields.initials.stringValue, ms:Number(x.document.fields.ms.integerValue) }));
 }
 async function lbAdd(sceneId, initials, ms){
-  const r = await fetch(`${LB_URL}/waldo/${sceneId}/scores?key=${LB_KEY}`, { method:'POST', headers:{'Content-Type':'application/json'},
+  const r = await fetch(`${LB_URL}/waldo/${sceneId}/${LB_COLL}?key=${LB_KEY}`, { method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ fields:{ initials:{stringValue:initials}, ms:{integerValue:String(ms)} } }) });
   if(!r.ok) throw new Error('lb ' + r.status);
   return (await r.json()).name;
