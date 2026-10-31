@@ -43,8 +43,6 @@
   .scenePick button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
   .scenePick img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:4px;border:2px solid var(--ink);display:block}
   .scenePick .rec{font-size:13px;color:#666;min-height:15px}
-  .scenePick .lvl{display:block;font-size:13px;font-weight:bold;letter-spacing:.5px}
-  .scenePick .lvl1{color:var(--green)}.scenePick .lvl2{color:#c98a00}.scenePick .lvl3{color:var(--red)}
 
   /* ---------- stage ---------- */
   #stage{position:fixed;inset:0;background:#cfe8f3}
@@ -55,8 +53,9 @@
   #bg{position:absolute;left:0;top:0;width:6300px;height:3600px;display:block;pointer-events:none}
   .char{position:absolute;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;transform-origin:50% 100%}
   .char.flip{transform:scaleX(-1)}
-  .char .ring{position:absolute;left:50%;top:50%;width:160%;height:110%;transform:translate(-50%,-50%);border-radius:50%;
-    border:8px solid var(--green);box-shadow:0 0 0 6px #fff,0 0 30px 8px rgba(31,157,58,.6);opacity:0}
+  /* thin ring, no glow, a bit bigger than the person so small teachers stay visible inside it */
+  .char .ring{position:absolute;left:50%;top:50%;width:calc(160% + 16px);height:calc(110% + 16px);transform:translate(-50%,-50%);border-radius:50%;
+    border:4px solid var(--green);box-shadow:0 0 0 2px #fff;opacity:0}
   .char.found .ring{animation:ring .8s ease-out forwards}
   @keyframes ring{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}60%{opacity:1;transform:translate(-50%,-50%) scale(.95)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
   .ripple{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:8px solid rgba(210,35,42,.9);pointer-events:none;animation:ripple .5s ease-out forwards}
@@ -139,7 +138,7 @@
   #win button.primary{background:var(--red);color:#fff}
   #win button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
   #win h3{margin:12px 0 2px;font-size:22px}
-  #win .scenePick button{border-radius:8px;font-size:17px;padding:6px 6px 8px;width:140px}
+  #win .btns.next{margin-top:16px}
   #win .btns:empty{display:none}
   .lb{margin-top:6px}
   .lb ol{list-style:none;padding:0;margin:4px auto 0;max-width:260px;max-height:230px;overflow-y:auto;text-align:left;font-size:19px}
@@ -176,9 +175,8 @@
     #title .stamp{width:64px;height:64px;top:-22px;right:-8px}
     #title p{font-size:17px}
     .scenePick{gap:8px;width:100%}
-    .scenePick button,#win .scenePick button{width:auto;flex:0 1 calc((100% - 16px) / 3);min-width:0;font-size:14px;padding:4px 4px 6px;box-shadow:3px 3px 0 var(--ink)}
+    .scenePick button{width:auto;flex:0 1 calc((100% - 16px) / 3);min-width:0;font-size:14px;padding:4px 4px 6px;box-shadow:3px 3px 0 var(--ink)}
     .scenePick .rec{font-size:10px;min-height:12px}
-    .scenePick .lvl{font-size:11px}
     #win .box{padding:16px 14px;transform:none}
     #win h1{font-size:34px}#win .time{font-size:46px}
     #toast{font-size:17px;padding:6px 16px}
@@ -282,8 +280,7 @@
       </div>
       <ol id="lbList"></ol>
     </div>
-    <h3 class="nextTitle">Pick your next stage</h3>
-    <div class="scenePick" id="winPick"></div>
+    <div class="btns next"><button id="nextPlace" class="primary"></button><button id="allPlaces">All places</button></div>
   </div>
 </div>
 <canvas id="confetti" class="hide"></canvas>
@@ -654,6 +651,7 @@ function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); c
 
 function showWin(){
   const ms = Math.round(elapsed()); $('winTime').textContent = fmt(ms);
+  $('nextPlace').textContent = `Next: ${nextScene().name} →`;
   const key = 'ww_best_' + scene.id; let best = 0;
   try { best = Number(localStorage.getItem(key) || 0); } catch(e){}
   if(!best || ms < best){ try { localStorage.setItem(key, String(ms)); } catch(e){} $('winBest').textContent = best ? '🎉 Your new personal best here!' : ''; }
@@ -750,11 +748,10 @@ let crowdTimer;
 addEventListener('resize', () => { clearTimeout(crowdTimer); crowdTimer = setTimeout(() => { if(!title.classList.contains('hide')) buildCrowd(); }, 200); });
 
 /* ---------- scene pickers (title page + after a stage) ---------- */
-const LEVELS = { 1:'★ Easy', 2:'★★ Medium', 3:'★★★ Hard' };
 function buildPickers(){
-  ['titlePick','winPick'].forEach(id => {
+  ['titlePick'].forEach(id => {
     /* easiest first, so kids can work their way up */
-    $(id).innerHTML = [...SCENES].sort((a, b) => a.level - b.level).map(sc => `<button data-scene="${sc.id}"><img src="img/thumb-${sc.id}.webp" alt=""><span class="lvl lvl${sc.level}">${LEVELS[sc.level]}</span><span>${sc.name}</span><span class="rec" data-rec="${sc.id}"></span></button>`).join('');
+    $(id).innerHTML = [...SCENES].sort((a, b) => a.level - b.level).map(sc => `<button data-scene="${sc.id}"><img src="img/thumb-${sc.id}.webp" alt=""><span>${sc.name}</span><span class="rec" data-rec="${sc.id}"></span></button>`).join('');
     $(id).querySelectorAll('button').forEach(b => b.onclick = () => startGame(b.dataset.scene));
   });
 }
@@ -783,14 +780,18 @@ $('hintBtn').onclick = () => {
   smooth(() => centerOn(c.x + ox, c.y + oy, minS * scene.hintZoom));
 };
 /* back to the place picker: stop the clock, clear the map, show the title screen */
-$('restartBtn').onclick = () => {
-  play('click');
+function showTitle(){
   running = false; cancelAnimationFrame(rafId);
   world.querySelectorAll('.char, .ripple').forEach(e => e.remove());
   $('intro').classList.add('hide'); document.body.classList.remove('intro');
   winEl.classList.add('hide'); stage.classList.add('hide'); title.classList.remove('hide');
   buildCrowd(); loadRecords();
-};
+}
+$('restartBtn').onclick = $('allPlaces').onclick = () => { play('click'); showTitle(); };
+/* after a win: the next place in easy-to-hard order (wraps around) */
+const ORDERED = [...SCENES].sort((a, b) => a.level - b.level);
+const nextScene = () => ORDERED[(ORDERED.indexOf(scene) + 1) % ORDERED.length];
+$('nextPlace').onclick = () => startGame(nextScene().id);
 
 /* ---------- confetti ---------- */
 function confetti(){
