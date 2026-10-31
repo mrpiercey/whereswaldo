@@ -27,8 +27,8 @@
   #title .box{z-index:1;margin:auto 0;flex:none}
   #title .stamp{position:absolute;top:-30px;right:-26px;width:104px;height:104px;box-sizing:border-box;padding:4px;background:#fff;border:3px solid var(--ink);border-radius:50%;transform:rotate(14deg);box-shadow:3px 4px 0 rgba(0,0,0,.3);pointer-events:none}
   #title .box{position:relative;background:var(--paper);border:4px solid var(--ink);border-radius:8px;padding:22px 28px 26px;
-    /* wide enough for 5 places per row so 9+ places stay on screen */
-    max-width:min(94vw,920px);text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);transform:rotate(-2deg)}
+    /* wide enough for 6 places per row so 11+ places stay on screen */
+    max-width:min(94vw,1100px);text-align:center;box-shadow:8px 8px 0 rgba(0,0,0,.35);transform:rotate(-2deg)}
   #title .box > p{max-width:560px;margin-left:auto;margin-right:auto}
   #title h1{margin:0 0 6px;font-size:clamp(28px,5vw,44px);line-height:1;letter-spacing:1px}
   #title h1 .w{color:var(--blue)}#title h1 .r{color:var(--red)}
@@ -389,6 +389,14 @@ const SCENES = [
       [2226,420],[2676,350],[2626,60],[1876,640],[2376,620],[1576,640],[2156,340],
       [300,868],[150,908],[450,848],[950,1068],[960,1268],[1050,1468],[800,1500],[1150,1418],[1250,1478],[1300,958],
       [1776,858],[1526,918],[2076,798],[1556,1428],
+    ] },
+  { id:'lyric', level:1, name:'The Lyric Theatre', bg:'img/bg-lyric.webp', W:2752, H:1536, gap:150, maxZoom:8, hintZoom:4,
+    size: y => 44 + 8 * (y / 1536),  /* close-up, so people are big */
+    spots:[
+      [520,500],[350,510],[700,480],[560,610],[580,720],[300,620],[640,190],[260,200],[900,130],
+      [1520,720],[1620,580],[2276,330],[1900,980],
+      [650,960],[900,940],[1150,890],[1250,960],
+      [1576,1020],[1676,1200],[1976,1080],[2346,1270],[1456,1380],[2226,1468],[1976,1460],[2046,1100],
     ] },
 ];
 let scene = SCENES[0];
